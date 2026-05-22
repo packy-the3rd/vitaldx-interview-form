@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vital DX 営業インタビューフォーム｜アメニティ様営業担当用</title>
+  <meta name="description" content="Vital DX rPPG 営業訪問時のインタビューシート。アメニティ株式会社 営業担当者専用。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== PASSWORD SCREEN ===== */
+    #pw-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #054D8A 0%, #0A6EBD 60%, #00C389 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+    }
+    #pw-screen::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .pw-card {
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 1;
+    }
+    .pw-logo {
+      width: 64px;
+      height: 64px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .pw-title {
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .pw-subtitle {
+      color: rgba(255,255,255,0.65);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .pw-input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    #pw-input {
+      width: 100%;
+      padding: 14px 48px 14px 16px;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      letter-spacing: 0.15em;
+      transition: border-color 0.2s, background 0.2s;
+      box-sizing: border-box;
+    }
+    #pw-input::placeholder { color: rgba(255,255,255,0.4); letter-spacing: 0; }
+    #pw-input:focus {
+      border-color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.18);
+    }
+    #pw-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+    #pw-error {
+      color: #FCA5A5;
+      font-size: 12px;
+      margin-bottom: 14px;
+      min-height: 18px;
+      font-weight: 500;
+    }
+    #pw-btn {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      color: #054D8A;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    #pw-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+    #pw-btn:active { transform: translateY(0); }
+    .pw-footer {
+      margin-top: 20px;
+      color: rgba(255,255,255,0.4);
+      font-size: 11px;
+    }
+    #main-content { display: none; }
+    :root {
+      --primary: #0A6EBD;
+      --primary-dark: #054D8A;
+      --primary-light: #E8F4FD;
+      --accent: #00C389;
+      --accent-dark: #009E6F;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --text-primary: #1A1F36;
+      --text-secondary: #6B7280;
+      --text-muted: #9CA3AF;
+      --border: #E5E7EB;
+      --border-focus: #0A6EBD;
+      --bg-main: #F0F4F8;
+      --bg-card: #FFFFFF;
+      --bg-section: #F8FAFC;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 0 0 60px 0;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: linear-gradient(135deg, #054D8A 0%, #0A6EBD 50%, #0891D4 100%);
+      color: white;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -5%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0,195,137,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 24px 36px;
+      position: relative;
+      z-index: 1;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.3); }
+    }
+    .header h1 {
+      font-size: clamp(22px, 4vw, 30px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+    .header h1 span {
+      color: #7DD3FC;
+    }
+    .header p {
+      font-size: 13px;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+    .header-meta {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .header-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    /* ===== MAIN CONTAINER ===== */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .progress-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .progress-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+    .progress-pct {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ===== SECTION CARDS ===== */
+    .section-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-top: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: box-shadow 0.2s;
+    }
+    .section-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .icon-a { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+    .icon-b { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+    .icon-c { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+    .icon-d { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+    .icon-e { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+    .icon-f { background: linear-gradient(135deg, #FEF9C3, #FEF08A); }
+    .icon-g { background: linear-gradient(135deg, #F1F5F9, #E2E8F0); }
+
+    .section-title-wrap { flex: 1; }
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .section-body {
+      padding: 20px 24px;
+    }
+
+    /* ===== ALERT ===== */
+    .alert {
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .alert-warning {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    .alert-info {
+      background: var(--primary-light);
+      border: 1px solid #BAE0FD;
+      color: #1e40af;
+    }
+    .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ===== FORM FIELDS ===== */
+    .field-group {
+      margin-bottom: 20px;
+    }
+    .field-group:last-child { margin-bottom: 0; }
+
+    label, .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .field-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 6px;
+      flex-shrink: 0;
+    }
+    .required {
+      display: inline-block;
+      background: var(--danger);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.05em;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(10,110,189,0.12);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ===== CHECKBOX CONFIRM ===== */
+    .confirm-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg-section);
+    }
+    .confirm-item:hover { border-color: var(--primary); background: var(--primary-light); }
+    .confirm-item.checked {
+      border-color: var(--accent);
+      background: #F0FDF8;
+    }
+    .confirm-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .confirm-text {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+    .confirm-text strong { color: var(--primary-dark); }
+
+    /* ===== CHECKBOX / RADIO OPTIONS ===== */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .options-grid.col2 { grid-template-columns: repeat(2, 1fr); }
+    .options-grid.col1 { grid-template-columns: 1fr; }
+
+    .opt-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13px;
+      background: white;
+    }
+    .opt-item:hover { border-color: var(--primary); background: var(--primary-light); }
+    .opt-item input[type="radio"],
+    .opt-item input[type="checkbox"] {
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+    .opt-item.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 500;
+    }
+
+    /* ===== TEMPERATURE GAUGE (RANK) ===== */
+    .rank-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .rank-btn {
+      flex: 1;
+      min-width: 60px;
+      padding: 12px 8px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      position: relative;
+    }
+    .rank-btn .rank-label { font-size: 18px; }
+    .rank-btn .rank-desc { font-size: 10px; font-weight: 500; margin-top: 3px; color: var(--text-muted); }
+    .rank-btn input { position: absolute; opacity: 0; }
+    .rank-s { border-color: #FCA5A5; }
+    .rank-s.selected { background: #FEF2F2; border-color: #EF4444; color: #991B1B; }
+    .rank-s.selected .rank-desc { color: #DC2626; }
+    .rank-a { border-color: #FCD34D; }
+    .rank-a.selected { background: #FFFBEB; border-color: #F59E0B; color: #92400E; }
+    .rank-b { border-color: #6EE7B7; }
+    .rank-b.selected { background: #F0FDF4; border-color: #10B981; color: #065F46; }
+    .rank-c { border-color: #93C5FD; }
+    .rank-c.selected { background: #EFF6FF; border-color: #3B82F6; color: #1E40AF; }
+    .rank-d { border-color: var(--border); }
+    .rank-d.selected { background: var(--bg-section); border-color: var(--text-muted); color: var(--text-secondary); }
+
+    /* ===== TWO-COL LAYOUT ===== */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 600px) {
+      .two-col, .three-col { grid-template-columns: 1fr; }
+      .options-grid.col2 { grid-template-columns: 1fr; }
+    }
+
+    /* ===== DIVIDER ===== */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ===== SUBMIT ===== */
+    .submit-wrap {
+      background: white;
+      border-top: 1px solid var(--border);
+      position: sticky;
+      bottom: 0;
+      z-index: 100;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+    }
+    .submit-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .submit-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(10,110,189,0.3);
+    }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(10,110,189,0.4);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* ===== SUCCESS STATE ===== */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 24px;
+    }
+    .success-screen.visible { display: block; }
+    .success-icon {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 24px rgba(0,195,137,0.3);
+    }
+
+    /* ===== PRINT / STAMP ===== */
+    @media print {
+      .progress-wrap, .submit-wrap { display: none; }
+      .header { background: #054D8A !important; -webkit-print-color-adjust: exact; }
+      body { padding: 0; }
+    }
+
+    /* ===== TOOLTIP ===== */
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 5px;
+      line-height: 1.5;
+    }
+
+    /* ===== HIGHLIGHT BOX ===== */
+    .highlight-box {
+      background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
+      border: 1px solid #BAE6FD;
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .highlight-box p { font-size: 12px; color: #0369A1; line-height: 1.6; }
+
+    /* ===== INTERNAL FIELD LABEL ===== */
+    .internal-tag {
+      display: inline-block;
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      color: #64748B;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== PASSWORD SCREEN ===== -->
+<div id="pw-screen">
+  <div class="pw-card">
+    <div class="pw-logo">🔐</div>
+    <div class="pw-title">Vital DX 営業フォーム</div>
+    <div class="pw-subtitle">
+      アメニティ様 営業担当者専用<br>
+      アクセスにはパスワードが必要です
+    </div>
+    <div class="pw-input-wrap">
+      <input type="password" id="pw-input" placeholder="パスワードを入力" autocomplete="current-password">
+      <button type="button" id="pw-toggle" onclick="togglePwVisibility()" title="表示/非表示">👁</button>
+    </div>
+    <div id="pw-error"></div>
+    <button id="pw-btn" onclick="checkPassword()">ログイン →</button>
+    <div class="pw-footer">© Vital Signs Digital Transformation CO., LTD</div>
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT (locked until password) ===== -->
+<div id="main-content">
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-badge">
+      <span class="dot"></span>
+      アメニティ様 営業担当者専用
+    </div>
+    <h1>Vital DX rPPG<br><span>営業インタビューシート</span></h1>
+    <p>訪問前に本フォームをご確認のうえ、商談中にご記入ください。<br>記入内容はリアルタイムでVital Signs DX社と共有されます。</p>
+    <div class="header-meta">
+      <div class="header-meta-item">📅 訪問日を必ず記録してください</div>
+      <div class="header-meta-item">🔒 取扱注意：社外秘</div>
+      <div class="header-meta-item">✉️ 送信後、自動で共有されます</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PROGRESS BAR ===== -->
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <span class="progress-label">入力進捗</span>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+</div>
+
+<!-- ===== FORM ===== -->
+<div class="container">
+  <form id="mainForm" novalidate>
+
+    <!-- ===== SECTION: 基本情報 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-a">📋</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section — Basic</div>
+          <div class="section-title">訪問基本情報</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="two-col">
+          <div class="field-group">
+            <label for="visit_date">訪問日 <span class="required">必須</span></label>
+            <input type="date" id="visit_date" name="visit_date" required>
+          </div>
+          <div class="field-group">
+            <label for="sales_rep">アメニティ担当者名 <span class="required">必須</span></label>
+            <input type="text" id="sales_rep" name="sales_rep" placeholder="例：山田 太郎" required>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="facility_name">施設名 <span class="required">必須</span></label>
+          <input type="text" id="facility_name" name="facility_name" placeholder="例：医療法人 〇〇会 ××ホーム" required>
+        </div>
+        <div class="two-col">
+          <div class="field-group">
+            <label for="contact_name">面談相手のお名前</label>
+            <input type="text" id="contact_name" name="contact_name" placeholder="例：鈴木 様">
+          </div>
+          <div class="field-group">
+            <label for="contact_title">役職・肩書き</label>
+            <input type="text" id="contact_title" name="contact_title" placeholder="例：施設長、事務長、看護師長">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION A: 事前同意確認 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-a">⚠️</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section A — 必須確認</div>
+          <div class="section-title">製品理解の確認（必須）</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="alert alert-warning">
+          <span class="alert-icon">⚠️</span>
+          <div>以下2点は<strong>商談の前提条件</strong>です。両項目にご同意いただけない場合、導入検討の対象外となります。必ず口頭でご説明のうえ、ご確認ください。</div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">1</span>4指標の測定製品であることの理解 <span class="required">必須</span></div>
+          <label class="confirm-item" id="confirm1-wrap">
+            <input type="checkbox" id="confirm1" name="confirm1" required onchange="toggleConfirm(this,'confirm1-wrap')">
+            <span class="confirm-text">
+              「Vital DX rPPGは<strong>血圧・脈拍・血中酸素濃度・表面温度</strong>の4指標を非接触で測定するシステム」であることを説明し、ご理解いただけた
+            </span>
+          </label>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">2</span>医療機器でないことの理解 <span class="required">必須</span></div>
+          <label class="confirm-item" id="confirm2-wrap">
+            <input type="checkbox" id="confirm2" name="confirm2" required onchange="toggleConfirm(this,'confirm2-wrap')">
+            <span class="confirm-text">
+              「本システムは<strong>医療機器ではなく</strong>、介護・医療業務効率化のためのICTツール」であることを説明し、ご理解いただけた
+            </span>
+          </label>
+        </div>
+
+        <div class="alert alert-info" style="margin-top:16px; margin-bottom:0;">
+          <span class="alert-icon">💡</span>
+          <div>いずれかが「理解不可・同意不可」の場合は、その旨を下部のコメント欄にご記載ください。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION B: 施設基本情報 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-b">🏥</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section B</div>
+          <div class="section-title">施設基本情報</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">3</span>施設種別 <span class="required">必須</span></div>
+          <div class="options-grid col2">
+            <label class="opt-item"><input type="radio" name="facility_type" value="特養"> 介護老人福祉施設（特養）</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="老健"> 老人保健施設（老健）</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="有料老人ホーム"> 有料老人ホーム</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="グループホーム"> グループホーム</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="障害者施設"> 障害者支援施設</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="通所介護"> 通所介護（デイサービス）</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="病院"> 病院・クリニック</label>
+            <label class="opt-item"><input type="radio" name="facility_type" value="その他"> その他</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="three-col">
+          <div class="field-group">
+            <label for="bed_count">ベッド数・定員</label>
+            <input type="number" id="bed_count" name="bed_count" placeholder="例：80" min="1">
+            <div class="hint">床 / 名</div>
+          </div>
+          <div class="field-group">
+            <label for="user_count">現在の入居・利用者数</label>
+            <input type="number" id="user_count" name="user_count" placeholder="例：72" min="1">
+            <div class="hint">名</div>
+          </div>
+          <div class="field-group">
+            <label for="staff_count">介護・看護スタッフ数</label>
+            <input type="number" id="staff_count" name="staff_count" placeholder="例：25" min="1">
+            <div class="hint">名（常勤換算でも可）</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">4</span>アメニティ様との取引状況</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="amenity_relation" value="既存顧客"> 既存顧客（入院セット等取引中）</label>
+            <label class="opt-item"><input type="radio" name="amenity_relation" value="新規見込み"> 新規見込み</label>
+            <label class="opt-item"><input type="radio" name="amenity_relation" value="過去取引あり"> 過去取引あり（休眠）</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION C: バイタル測定の実態 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-c">📊</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section C</div>
+          <div class="section-title">現在のバイタル測定の実態</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">5</span>現在のバイタル測定方法（複数選択可）</div>
+          <div class="options-grid col2">
+            <label class="opt-item"><input type="checkbox" name="measure_method" value="接触式体温計"> 接触式体温計</label>
+            <label class="opt-item"><input type="checkbox" name="measure_method" value="非接触体温計"> 非接触体温計</label>
+            <label class="opt-item"><input type="checkbox" name="measure_method" value="パルスオキシメーター"> パルスオキシメーター</label>
+            <label class="opt-item"><input type="checkbox" name="measure_method" value="自動血圧計"> 自動血圧計</label>
+            <label class="opt-item"><input type="checkbox" name="measure_method" value="生体センサー"> 生体センサー（ベッド等）</label>
+            <label class="opt-item"><input type="checkbox" name="measure_method" value="その他"> その他</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">6</span>測定頻度</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="measure_freq" value="1日1回"> 1日1回</label>
+            <label class="opt-item"><input type="radio" name="measure_freq" value="1日2回"> 1日2回</label>
+            <label class="opt-item"><input type="radio" name="measure_freq" value="1日3回以上"> 1日3回以上</label>
+            <label class="opt-item"><input type="radio" name="measure_freq" value="週数回"> 週数回（随時）</label>
+            <label class="opt-item"><input type="radio" name="measure_freq" value="その他"> その他</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">7</span>測定結果の記録方法</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="record_method" value="紙"> 紙（手書き）</label>
+            <label class="opt-item"><input type="radio" name="record_method" value="介護記録ソフト"> 介護記録ソフト</label>
+            <label class="opt-item"><input type="radio" name="record_method" value="Excel"> Excel / スプレッドシート</label>
+            <label class="opt-item"><input type="radio" name="record_method" value="混在"> 紙とデジタル混在</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">8</span>利用中の介護記録ソフト</div>
+          <div class="options-grid col2">
+            <label class="opt-item"><input type="radio" name="care_software" value="ワイズマン"> ワイズマン</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="カイポケ"> カイポケ</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="ほのぼのNEXT"> ほのぼのNEXT</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="CareVisor"> CareVisor（ケアバイザー）</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="iBow"> iBow</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="ケアマネジャー"> ケアマネジャー（ウェルビー）</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="やさしい手"> やさしい手</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="未使用"> 介護記録ソフト未使用</label>
+            <label class="opt-item"><input type="radio" name="care_software" value="その他"> その他（下記に記入）</label>
+          </div>
+          <input type="text" name="care_software_other" placeholder="その他の場合：ソフト名をご記入ください" style="margin-top:8px;">
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">9</span>電子カルテの利用</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="emr" value="あり"> あり（下記に記入）</label>
+            <label class="opt-item"><input type="radio" name="emr" value="なし"> なし</label>
+            <label class="opt-item"><input type="radio" name="emr" value="検討中"> 導入検討中</label>
+          </div>
+          <input type="text" name="emr_name" placeholder="電子カルテ名（例：fujitsu HOPE/EGMAIN-GX、M3 DigiKar など）" style="margin-top:8px;">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION D: 課題・ニーズ ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-d">🔍</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section D</div>
+          <div class="section-title">課題・ニーズの把握</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">10</span>バイタル測定で困っていること（複数選択可）</div>
+          <div class="options-grid col2">
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="測定時間"> 測定に時間がかかる</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="記録転記"> 記録・転記が手間</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="スタッフ不足"> スタッフ不足・人手不足</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="感染リスク"> 接触による感染リスク</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="データ管理"> データの一元管理ができない</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="見落とし"> 異常値の見落とし・対応遅れ</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="夜間対応"> 夜間・早朝の急変対応</label>
+            <label class="opt-item"><input type="checkbox" name="pain_point" value="特になし"> 特に課題なし</label>
+          </div>
+          <textarea name="pain_point_detail" placeholder="具体的なエピソードや背景があればご記入ください" style="margin-top:10px;"></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">11</span>ICT・DXへの施設方針</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="dx_stance" value="積極的"> 積極導入方針（法人方針あり）</label>
+            <label class="opt-item"><input type="radio" name="dx_stance" value="費用次第"> 費用対効果次第で検討</label>
+            <label class="opt-item"><input type="radio" name="dx_stance" value="慎重"> 慎重・消極的</label>
+            <label class="opt-item"><input type="radio" name="dx_stance" value="不明"> わからない</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">12</span>類似製品の導入・検討履歴</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="competitor"> 他社の類似製品を導入済み</label>
+            <label class="opt-item"><input type="radio" name="competitor"> 他社を検討中（比較中）</label>
+            <label class="opt-item"><input type="radio" name="competitor"> 初めての検討</label>
+          </div>
+          <input type="text" name="competitor_name" placeholder="競合製品名・検討中サービス名（わかれば）" style="margin-top:8px;">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION E: 予算・意思決定 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-e">💰</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section E</div>
+          <div class="section-title">予算・意思決定プロセス</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">13</span>導入の決裁ライン</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="decision_maker" value="現場責任者"> 現場責任者（施設長等）</label>
+            <label class="opt-item"><input type="radio" name="decision_maker" value="法人本部"> 法人本部・管理部</label>
+            <label class="opt-item"><input type="radio" name="decision_maker" value="理事会"> 理事会・役員会</label>
+            <label class="opt-item"><input type="radio" name="decision_maker" value="不明"> 不明</label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="two-col">
+          <div class="field-group">
+            <div class="field-label"><span class="field-num">14</span>次年度予算の策定時期</div>
+            <div class="options-grid col1">
+              <label class="opt-item"><input type="radio" name="budget_timing" value="〜8月"> ～8月（上半期）</label>
+              <label class="opt-item"><input type="radio" name="budget_timing" value="9〜11月"> 9〜11月</label>
+              <label class="opt-item"><input type="radio" name="budget_timing" value="12月以降"> 12月以降</label>
+              <label class="opt-item"><input type="radio" name="budget_timing" value="随時"> 随時対応可</label>
+              <label class="opt-item"><input type="radio" name="budget_timing" value="不明"> 不明</label>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-label"><span class="field-num">15</span>補助金・助成金の活用意向</div>
+            <div class="options-grid col1">
+              <label class="opt-item"><input type="radio" name="subsidy" value="積極活用"> 積極的に活用したい</label>
+              <label class="opt-item"><input type="radio" name="subsidy" value="活用予定"> 既に申請・活用予定あり</label>
+              <label class="opt-item"><input type="radio" name="subsidy" value="不要"> 補助金なしでも検討可</label>
+              <label class="opt-item"><input type="radio" name="subsidy" value="不明"> わからない</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">16</span>導入を検討する想定時期</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="timeline" value="1ヶ月以内"> 1ヶ月以内</label>
+            <label class="opt-item"><input type="radio" name="timeline" value="3ヶ月以内"> 3ヶ月以内</label>
+            <label class="opt-item"><input type="radio" name="timeline" value="6ヶ月以内"> 6ヶ月以内</label>
+            <label class="opt-item"><input type="radio" name="timeline" value="1年以内"> 1年以内</label>
+            <label class="opt-item"><input type="radio" name="timeline" value="未定"> 未定・長期</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION F: インフラ確認 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-f">📶</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section F</div>
+          <div class="section-title">インフラ・環境確認</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="two-col">
+          <div class="field-group">
+            <div class="field-label"><span class="field-num">17</span>施設内Wi-Fi整備状況</div>
+            <div class="options-grid col1">
+              <label class="opt-item"><input type="radio" name="wifi" value="全館"> 全館整備済み</label>
+              <label class="opt-item"><input type="radio" name="wifi" value="一部"> 一部エリアのみ</label>
+              <label class="opt-item"><input type="radio" name="wifi" value="なし"> なし（整備予定あり）</label>
+              <label class="opt-item"><input type="radio" name="wifi" value="未整備"> なし（予定もなし）</label>
+              <label class="opt-item"><input type="radio" name="wifi" value="不明"> 不明</label>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-label"><span class="field-num">18</span>タブレット・スマートフォンの業務利用</div>
+            <div class="options-grid col1">
+              <label class="opt-item"><input type="radio" name="device_use" value="活用中"> 積極活用中</label>
+              <label class="opt-item"><input type="radio" name="device_use" value="一部利用"> 一部利用あり</label>
+              <label class="opt-item"><input type="radio" name="device_use" value="なし"> ほぼ利用なし</label>
+              <label class="opt-item"><input type="radio" name="device_use" value="検討中"> 導入検討中</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">19</span>専用タブレット・スマホの貸出への関心</div>
+          <div class="options-grid">
+            <label class="opt-item"><input type="radio" name="device_provision" value="希望あり"> ぜひ希望（スマホ提供オプションへの関心あり）</label>
+            <label class="opt-item"><input type="radio" name="device_provision" value="自前でよい"> 自前デバイスで対応できる</label>
+            <label class="opt-item"><input type="radio" name="device_provision" value="未検討"> 未検討</label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== SECTION G: 営業担当コメント ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-g">✍️</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section G — 社内共有用</div>
+          <div class="section-title">営業担当コメント・総合評価 <span class="internal-tag">Internal</span></div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="highlight-box">
+          <p>🔒 このセクションはVital Signs DX社との社内共有用です。訪問後すみやかにご記入ください。</p>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">20</span>温度感・総合評価 <span class="required">必須</span></div>
+          <div class="rank-group">
+            <label class="rank-btn rank-s" id="rank-s">
+              <input type="radio" name="rank" value="S" required onchange="selectRank()">
+              <div class="rank-label">🔥 S</div>
+              <div class="rank-desc">即導入検討</div>
+            </label>
+            <label class="rank-btn rank-a" id="rank-a">
+              <input type="radio" name="rank" value="A" onchange="selectRank()">
+              <div class="rank-label">⭐ A</div>
+              <div class="rank-desc">有望・継続</div>
+            </label>
+            <label class="rank-btn rank-b" id="rank-b">
+              <input type="radio" name="rank" value="B" onchange="selectRank()">
+              <div class="rank-label">💚 B</div>
+              <div class="rank-desc">フォロー中</div>
+            </label>
+            <label class="rank-btn rank-c" id="rank-c">
+              <input type="radio" name="rank" value="C" onchange="selectRank()">
+              <div class="rank-label">🔵 C</div>
+              <div class="rank-desc">長期保留</div>
+            </label>
+            <label class="rank-btn rank-d" id="rank-d">
+              <input type="radio" name="rank" value="D" onchange="selectRank()">
+              <div class="rank-label">⬜ D</div>
+              <div class="rank-desc">見送り</div>
+            </label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">21</span>商談の反応・主なご意見</div>
+          <textarea name="reaction" placeholder="例：価格について前向きな反応。次回、施設長同席での再訪を提案する方向。カルテ連携の有無を確認したいとのこと。" rows="4"></textarea>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">22</span>ネクストアクション（期限・担当）</div>
+          <textarea name="next_action" placeholder="例：6/5までに追加資料を送付（アメニティ担当：田中）→ 6/15に再訪問予定" rows="3"></textarea>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label"><span class="field-num">23</span>その他・申し送り事項</div>
+          <textarea name="memo" placeholder="Vital DX社への特記事項、懸念点、追加サポートの依頼など" rows="3"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SPACER for sticky submit -->
+    <div style="height:24px;"></div>
+
+  </form>
+
+  <!-- Success Screen -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✅</div>
+    <h2 style="font-size:22px; margin-bottom:12px;">送信が完了しました</h2>
+    <p style="color:var(--text-secondary); font-size:14px; line-height:1.7;">
+      インタビュー内容がVital Signs DX社に共有されました。<br>
+      お疲れ様でした。次回訪問も引き続きよろしくお願いいたします。
+    </p>
+    <button onclick="resetForm()" style="margin-top:24px; padding:12px 32px; background:var(--primary); color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;">
+      新しいフォームに入力する
+    </button>
+  </div>
+</div>
+
+<!-- ===== STICKY SUBMIT ===== -->
+<div class="submit-wrap" id="submitBar">
+  <div class="submit-inner">
+    <div class="submit-note">
+      送信前に全項目をご確認ください<br>
+      <strong>A欄の2項目</strong>と<strong>G欄の総合評価</strong>は必須です
+    </div>
+    <button type="submit" form="mainForm" class="btn-submit" id="submitBtn">
+      <span>📤</span> 送信して共有する
+    </button>
+  </div>
+</div>
+
+</div><!-- /main-content -->
+
+<script>
+  // ===== PASSWORD CHECK =====
+  const CORRECT_PASSWORD = 'Vdx0928##$';
+
+  function checkPassword() {
+    const input = document.getElementById('pw-input').value;
+    const error = document.getElementById('pw-error');
+    if (input === CORRECT_PASSWORD) {
+      document.getElementById('pw-screen').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+      updateProgress();
+    } else {
+      error.textContent = 'パスワードが正しくありません。もう一度お試しください。';
+      document.getElementById('pw-input').style.borderColor = '#FCA5A5';
+      setTimeout(() => {
+        document.getElementById('pw-input').style.borderColor = '';
+      }, 1500);
+    }
+  }
+
+  function togglePwVisibility() {
+    const input = document.getElementById('pw-input');
+    const btn = document.getElementById('pw-toggle');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  }
+
+  document.getElementById('pw-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  // ===== PROGRESS TRACKING =====
+  function updateProgress() {
+    const form = document.getElementById('mainForm');
+    const required = form.querySelectorAll('[required]');
+    let filled = 0;
+    required.forEach(el => {
+      if (el.type === 'checkbox' && el.checked) filled++;
+      else if (el.type === 'radio') {
+        const group = form.querySelectorAll(`[name="${el.name}"]`);
+        const anyChecked = Array.from(group).some(r => r.checked);
+        if (anyChecked) {
+          // Count once per group
+          const counted = form.querySelector(`[name="${el.name}"][data-counted]`);
+          if (!counted) {
+            filled++;
+            el.dataset.counted = '1';
+          }
+        }
+      } else if (el.value.trim()) filled++;
+    });
+
+    // Reset counted flags
+    form.querySelectorAll('[data-counted]').forEach(el => delete el.dataset.counted);
+
+    // Simpler approach: count filled inputs
+    const allInputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+    let totalFields = 0;
+    let filledFields = 0;
+    const countedRadios = new Set();
+
+    allInputs.forEach(el => {
+      if (el.type === 'radio') {
+        if (!countedRadios.has(el.name)) {
+          countedRadios.add(el.name);
+          totalFields++;
+          const anyChecked = form.querySelector(`[name="${el.name}"]:checked`);
+          if (anyChecked) filledFields++;
+        }
+      } else if (el.type === 'checkbox') {
+        totalFields++;
+        if (el.checked) filledFields++;
+      } else {
+        totalFields++;
+        if (el.value.trim()) filledFields++;
+      }
+    });
+
+    // Also count non-required but filled optional fields for a more lively progress
+    const optionalFilled = form.querySelectorAll('input:not([required]):checked, select:not([required]):not([value=""]), textarea:not([required])').length;
+    const totalOptional = form.querySelectorAll('input[type="radio"]:not([required]), input[type="checkbox"]:not([required]), textarea:not([required])').length;
+
+    const pct = totalFields > 0 ? Math.round((filledFields / totalFields) * 100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+  }
+
+  document.getElementById('mainForm').addEventListener('change', updateProgress);
+  document.getElementById('mainForm').addEventListener('input', updateProgress);
+
+  // ===== CONFIRM CHECKBOX STYLE =====
+  function toggleConfirm(checkbox, wrapId) {
+    const wrap = document.getElementById(wrapId);
+    if (checkbox.checked) wrap.classList.add('checked');
+    else wrap.classList.remove('checked');
+    updateProgress();
+  }
+
+  // ===== RANK BUTTON STYLE =====
+  function selectRank() {
+    ['s','a','b','c','d'].forEach(r => {
+      const btn = document.getElementById('rank-' + r);
+      const input = btn.querySelector('input');
+      if (input.checked) btn.classList.add('selected');
+      else btn.classList.remove('selected');
+    });
+    updateProgress();
+  }
+
+  // ===== OPT-ITEM STYLE =====
+  document.querySelectorAll('.opt-item input').forEach(input => {
+    input.addEventListener('change', function() {
+      if (this.type === 'radio') {
+        document.querySelectorAll(`[name="${this.name}"]`).forEach(r => {
+          r.closest('.opt-item')?.classList.remove('selected');
+        });
+      }
+      if (this.checked) {
+        this.closest('.opt-item')?.classList.add('selected');
+      } else {
+        this.closest('.opt-item')?.classList.remove('selected');
+      }
+    });
+  });
+
+  // ===== FORM SUBMIT =====
+  document.getElementById('mainForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Validation
+    const confirm1 = document.getElementById('confirm1');
+    const confirm2 = document.getElementById('confirm2');
+    const rankChecked = document.querySelector('[name="rank"]:checked');
+    const visitDate = document.getElementById('visit_date').value;
+    const salesRep = document.getElementById('sales_rep').value;
+    const facilityName = document.getElementById('facility_name').value;
+
+    let errors = [];
+    if (!visitDate) errors.push('訪問日');
+    if (!salesRep.trim()) errors.push('アメニティ担当者名');
+    if (!facilityName.trim()) errors.push('施設名');
+    if (!confirm1.checked) errors.push('製品理解①（4指標）の確認');
+    if (!confirm2.checked) errors.push('製品理解②（医療機器でない）の確認');
+    if (!rankChecked) errors.push('総合評価（温度感）');
+
+    if (errors.length > 0) {
+      alert('以下の必須項目を入力・確認してください：\n\n' + errors.map(e => '・' + e).join('\n'));
+      return;
+    }
+
+    // Collect data
+    const formData = new FormData(this);
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+      if (data[key]) {
+        if (Array.isArray(data[key])) data[key].push(value);
+        else data[key] = [data[key], value];
+      } else {
+        data[key] = value;
+      }
+    }
+
+    console.log('Form data:', data);
+
+    // Show success
+    document.getElementById('mainForm').style.display = 'none';
+    document.getElementById('submitBar').style.display = 'none';
+    document.getElementById('successScreen').classList.add('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // ここにZoho Forms / Google Forms などへのPOSTを追加できます
+    // fetch('YOUR_ENDPOINT_URL', { method: 'POST', body: JSON.stringify(data), ... });
+  });
+
+  function resetForm() {
+    document.getElementById('mainForm').reset();
+    document.getElementById('mainForm').style.display = 'block';
+    document.getElementById('submitBar').style.display = 'block';
+    document.getElementById('successScreen').classList.remove('visible');
+    document.querySelectorAll('.confirm-item').forEach(el => el.classList.remove('checked'));
+    document.querySelectorAll('.opt-item').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.rank-btn').forEach(el => el.classList.remove('selected'));
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Init
+  updateProgress();
+</script>
+</body>
+</html>
