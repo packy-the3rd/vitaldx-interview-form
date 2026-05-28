@@ -1462,15 +1462,15 @@
 
     // Zoho必須の認証・隠しフィールド（削除不可）
     const zohoHidden = {
-      'xnQsjsdp': 'dedc439d6d9e2299c80009436c6dbbeef57751f3a453e24201a6bf4b24d0058b',
+      'xnQsjsdp': 'd7768e5871cc81341abc13dfc3bd7e69d52053e974e06db932c245d37dc0ffda',
       'zc_gad': '',
-      'xmIwtLD': '88caf7dbf2760d0bbd91931f18aaaaa03c1d854d70b5c3fe94e90fc3f0c7591137e88987191e38e622dbcf2858c4105c',
+      'xmIwtLD': '2e6bb1e7c87059abbe5c3303da1c737dedfc2df945f2e200d1977fe8b7f3526234e431a7931008cc750e22e0eb74a830',
       'actionType': 'TGVhZHM=',
       'returnURL': 'https://packy-the3rd.github.io/vitaldx-interview-form/',
       'aG9uZXlwb3Q': ''
     };
 
-    // フォームデータをZoho CRMフィールドにマッピング
+    // フォームデータをZoho CRMフィールドにマッピング（LEADCF = Zoho内部名）
     const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
     const zohoFields = {
       ...zohoHidden,
@@ -1478,44 +1478,43 @@
       'Company':     data.facility_name || '',
       'Last Name':   data.contact_name || data.sales_rep || '担当者',
       'Lead Source': 'アメニティ営業',
-      'Description': buildZohoDescription(data, arr),
 
-      // カスタムフィールド
-      'Visit_Date':          data.visit_date || '',
-      'Sales_Rep':           data.sales_rep || '',
-      'Facility_Type':       data.facility_type || '',
-      'Bed_Count':           data.bed_count || '',
-      'User_Count':          data.user_count || '',
-      'Staff_Count':         data.staff_count || '',
-      'Amenity_Relation':    data.amenity_relation || '',
-      'Measure_Method':      arr(data.measure_method),
-      'Measure_Freq':        data.measure_freq || '',
-      'Record_Method':       data.record_method || '',
-      'Care_Software':       data.care_software || '',
-      'Care_Software_Other': data.care_software_other || '',
-      'EMR':                 data.emr || '',
-      'EMR_Name':            data.emr_name || '',
-      'Pain_Point':          arr(data.pain_point),
-      'Pain_Point_Detail':   data.pain_point_detail || '',
-      'DX_Stance':           data.dx_stance || '',
-      'Competitor':          data.competitor || '',
-      'Competitor_Name':     data.competitor_name || '',
-      'Decision_Maker':      data.decision_maker || '',
-      'Budget_Timing':       data.budget_timing || '',
-      'Subsidy':             data.subsidy || '',
-      'Timeline':            data.timeline || '',
-      'WiFi':                data.wifi || '',
-      'Device_Use':          data.device_use || '',
-      'Device_Provision':    data.device_provision || '',
-      'Rank':                data.rank || '',
-      'Reaction':            data.reaction || '',
-      'Next_Action':         data.next_action || '',
-      'Memo':                data.memo || '',
-      'Confirm_4Indicators': data.confirm1 ? '確認済' : '未確認',
-      'Confirm_Not_Medical': data.confirm2 ? '確認済' : '未確認',
-      'Video_Watched':       data.video1 ? '視聴済' : '未視聴',
-      'Video_Understood':    data.video2 ? '理解済' : '未確認',
-      'Video_Explainable':   data.video3 ? '説明可' : '未確認'
+      // カスタムフィールド（Zoho内部名 LEADCF）
+      'LEADCF54':    data.visit_date || '',           // Visit_Date
+      'LEADCF48':    data.sales_rep || '',             // Sales_Rep
+      'LEADCF121':   data.facility_type || '',         // Facility_Type
+      'LEADCF51':    data.bed_count || '',              // Bed_Count
+      'LEADCF52':    data.user_count || '',             // User_Count
+      'LEADCF53':    data.staff_count || '',            // Staff_Count
+      'LEADCF122':   data.amenity_relation || '',      // Amenity_Relation
+      'LEADCF25':    arr(data.measure_method),         // Measure_Method
+      'LEADCF33':    data.measure_freq || '',           // Measure_Freq
+      'LEADCF38':    data.record_method || '',          // Record_Method
+      'LEADCF43':    data.care_software || '',          // Care_Software
+      'LEADCF49':    data.care_software_other || '',    // Care_Software_Other
+      'LEADCF41':    data.emr || '',                    // EMR
+      'LEADCF50':    data.emr_name || '',               // EMR_Name
+      'LEADCF23':    arr(data.pain_point),             // Pain_Point
+      'LEADCF28':    data.pain_point_detail || '',      // Pain_Point_Detail
+      'LEADCF22':    data.dx_stance || '',              // DX_Stance
+      'LEADCF26':    data.competitor || '',             // Competitor
+      'LEADCF35':    data.competitor_name || '',        // Competitor_Name
+      'LEADCF24':    data.decision_maker || '',         // Decision_Maker
+      'LEADCF29':    data.budget_timing || '',          // Budget_Timing
+      'LEADCF27':    data.subsidy || '',                // Subsidy
+      'LEADCF34':    data.timeline || '',               // Timeline
+      'LEADCF31':    data.wifi || '',                   // WiFi
+      'LEADCF40':    data.device_use || '',             // Device_Use
+      'LEADCF37':    data.device_provision || '',       // Device_Provision
+      'LEADCF44':    data.rank || '',                   // Rank
+      'LEADCF30':    data.reaction || '',               // Reaction
+      'LEADCF32':    data.next_action || '',            // Next_Action
+      'LEADCF36':    data.memo || '',                   // Memo
+      'LEADCF39':    data.confirm1 ? '確認済' : '未確認',  // Confirm_4Indicators
+      'LEADCF42':    data.confirm2 ? '確認済' : '未確認',  // Confirm_Not_Medical
+      'LEADCF45':    data.video1 ? '視聴済' : '未視聴',    // Video_Watched
+      'LEADCF47':    data.video2 ? '理解済' : '未確認',    // Video_Understood
+      'LEADCF21':    data.video3 ? '説明可' : '未確認'     // Video_Explainable
     };
 
     // フィールドをフォームに追加
