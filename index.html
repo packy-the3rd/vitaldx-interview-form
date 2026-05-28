@@ -809,6 +809,65 @@
       </div>
     </div>
 
+    <!-- ===== SECTION A2: 製品ビデオの確認 ===== -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon icon-a">🎬</div>
+        <div class="section-title-wrap">
+          <div class="section-label">Section A-2 — 必須確認</div>
+          <div class="section-title">製品ビデオの確認（必須）</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="alert alert-warning">
+          <span class="alert-icon">⚠️</span>
+          <div>以下のYouTube動画は<strong>商談前に必ず視聴</strong>してください。製品の実際の動作・機能・利用シーンを正確に理解したうえで、顧客へご説明いただくことが前提となります。</div>
+        </div>
+
+        <div class="highlight-box" style="margin-bottom:20px;">
+          <p style="font-size:13px; font-weight:600; color:#0369A1; margin-bottom:8px;">📺 Vital DX rPPG 製品紹介動画</p>
+          <a href="https://youtu.be/I3o06d7CbE4" target="_blank" rel="noopener noreferrer"
+            style="display:inline-flex; align-items:center; gap:8px; background:#FF0000; color:white; padding:10px 20px; border-radius:8px; font-weight:700; font-size:14px; text-decoration:none; transition:opacity 0.2s;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            ▶ YouTubeで動画を視聴する
+          </a>
+          <p style="margin-top:10px; font-size:11px; color:#0369A1;">※ リンクをクリックするとYouTubeが開きます。動画を最後まで視聴してから商談にお進みください。</p>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">動画視聴の確認チェック <span class="required">必須</span></div>
+
+          <label class="confirm-item" id="video1-wrap">
+            <input type="checkbox" id="video1" name="video1" required onchange="toggleConfirm(this,'video1-wrap')">
+            <span class="confirm-text">
+              上記のYouTube動画（製品紹介）を<strong>最後まで視聴した</strong>
+            </span>
+          </label>
+
+          <label class="confirm-item" id="video2-wrap">
+            <input type="checkbox" id="video2" name="video2" required onchange="toggleConfirm(this,'video2-wrap')">
+            <span class="confirm-text">
+              動画で紹介されている<strong>製品の機能・操作手順・利用シーン</strong>を理解した
+            </span>
+          </label>
+
+          <label class="confirm-item" id="video3-wrap">
+            <input type="checkbox" id="video3" name="video3" required onchange="toggleConfirm(this,'video3-wrap')">
+            <span class="confirm-text">
+              顧客からの質問に対し、動画内容をもとに<strong>正確に説明できる</strong>と判断した
+            </span>
+          </label>
+        </div>
+
+        <div class="alert alert-info" style="margin-top:4px; margin-bottom:0;">
+          <span class="alert-icon">💡</span>
+          <div>視聴が完了していない場合は、本フォームへの記入を一時中断し、動画を確認してから商談を再開してください。</div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ===== SECTION B: 施設基本情報 ===== -->
     <div class="section-card">
       <div class="section-header">
@@ -1338,6 +1397,9 @@
     // Validation
     const confirm1 = document.getElementById('confirm1');
     const confirm2 = document.getElementById('confirm2');
+    const video1 = document.getElementById('video1');
+    const video2 = document.getElementById('video2');
+    const video3 = document.getElementById('video3');
     const rankChecked = document.querySelector('[name="rank"]:checked');
     const visitDate = document.getElementById('visit_date').value;
     const salesRep = document.getElementById('sales_rep').value;
@@ -1349,6 +1411,9 @@
     if (!facilityName.trim()) errors.push('施設名');
     if (!confirm1.checked) errors.push('製品理解①（4指標）の確認');
     if (!confirm2.checked) errors.push('製品理解②（医療機器でない）の確認');
+    if (!video1.checked) errors.push('製品ビデオ確認①（動画視聴完了）');
+    if (!video2.checked) errors.push('製品ビデオ確認②（機能・操作理解）');
+    if (!video3.checked) errors.push('製品ビデオ確認③（顧客への説明可能）');
     if (!rankChecked) errors.push('総合評価（温度感）');
 
     if (errors.length > 0) {
@@ -1356,137 +1421,147 @@
       return;
     }
 
-    // Collect data (handle multi-value checkboxes)
+    // ============================================================
+    //  ▼▼▼ Zoho CRM API 設定（セットアップ手順書を参照）▼▼▼
+    // ============================================================
+    const ZOHO_CONFIG = {
+      clientId:     '1000.SY62U6NNQ7OWCAE8XRBGOPAA1EISSB',
+      clientSecret: '1b8c4aca66e2688808372e40789521459e7fb9ebec',
+      refreshToken: '1000.03ccc3aee3c2bfb0a5a758b0a073f2b5.b66188e346a17d925c26f34520f23692',
+      // Zohoアカウントのデータセンターに合わせて変更
+      // JP/AS: accounts.zoho.jp / US: accounts.zoho.com / EU: accounts.zoho.eu
+      accountsUrl:  'https://accounts.zoho.jp/oauth/v2/token',
+      apiUrl:       'https://www.zohoapis.jp/crm/v7/Leads',
+    };
+    // ============================================================
+
+    // チェックボックスはFormDataに含まれないため個別処理
+    const checkboxNames = ['confirm1', 'confirm2', 'video1', 'video2', 'video3'];
+
+    // フォームデータ収集
     const formData = new FormData(this);
-    const data = {};
+    const raw = {};
     for (let [key, value] of formData.entries()) {
-      if (data[key]) {
-        if (Array.isArray(data[key])) data[key].push(value);
-        else data[key] = [data[key], value];
+      if (raw[key]) {
+        if (Array.isArray(raw[key])) raw[key].push(value);
+        else raw[key] = [raw[key], value];
       } else {
-        data[key] = value;
+        raw[key] = value;
       }
     }
-
-    // ===== ZOHO CRM 送信（バックグラウンド・iframeで実行） =====
-    submitToZohoCRM(data);
-
-    // Show success screen (UIはそのまま維持)
-    document.getElementById('mainForm').style.display = 'none';
-    document.getElementById('submitBar').style.display = 'none';
-    document.getElementById('successScreen').classList.add('visible');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  // ===== ZOHO CRM WebToLead 送信関数 =====
-  function submitToZohoCRM(data) {
-    // iframeでバックグラウンド送信（ページ遷移なし）
-    const iframeName = 'zoho_frame_' + Date.now();
-    const iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    // Zoho用フォームを動的生成
-    const zohoForm = document.createElement('form');
-    zohoForm.method = 'POST';
-    zohoForm.action = 'https://crm.zoho.jp/crm/WebToLeadForm';
-    zohoForm.acceptCharset = 'UTF-8';
-    zohoForm.target = iframeName;
-    zohoForm.style.display = 'none';
-
-    // Zoho必須の認証・隠しフィールド（削除不可）
-    const zohoHidden = {
-      'xnQsjsdp': 'dedc439d6d9e2299c80009436c6dbbeef57751f3a453e24201a6bf4b24d0058b',
-      'zc_gad': '',
-      'xmIwtLD': '88caf7dbf2760d0bbd91931f18aaaaa03c1d854d70b5c3fe94e90fc3f0c7591137e88987191e38e622dbcf2858c4105c',
-      'actionType': 'TGVhZHM=',
-      'returnURL': 'https://packy-the3rd.github.io/vitaldx-interview-form/',
-      'aG9uZXlwb3Q': ''
-    };
-
-    // フォームデータをZoho CRMフィールドにマッピング
-    const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
-    const zohoFields = {
-      ...zohoHidden,
-      'Company':     data.facility_name || '',              // 施設名 → 会社
-      'Last Name':   data.contact_name || data.sales_rep || '担当者', // 面談相手 → 姓
-      'Lead Source': 'パートナー',                           // アメニティ経由
-      'Description': buildZohoDescription(data, arr)        // 全インタビュー内容
-    };
-
-    // フィールドをフォームに追加
-    Object.entries(zohoFields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value || '';
-      zohoForm.appendChild(input);
+    checkboxNames.forEach(name => {
+      const el = document.getElementById(name);
+      raw[name] = el && el.checked ? true : false;
     });
 
-    document.body.appendChild(zohoForm);
-    document.charset = 'UTF-8';
-    zohoForm.submit();
+    // 複数選択フィールドを文字列に変換
+    const joinArr = v => Array.isArray(v) ? v.join('、') : (v || '');
 
-    // 送信後クリーンアップ（5秒後）
-    setTimeout(() => {
-      try { document.body.removeChild(zohoForm); } catch(e) {}
-      try { document.body.removeChild(iframe); } catch(e) {}
-    }, 5000);
-  }
+    // Zoho CRM Leads フィールドへのマッピング
+    // ※ Last_Name は Zoho CRM の必須フィールド
+    const leadData = {
+      // 基本情報
+      Last_Name:         raw.facility_name  || '施設名未入力',
+      First_Name:        raw.contact_name   || '',
+      Title:             raw.contact_title  || '',
+      Company:           raw.facility_name  || '',
+      Lead_Source:       'アメニティ営業',
 
-  // ===== Zoho Description 組み立て関数 =====
-  function buildZohoDescription(d, arr) {
-    return [
-      '=== Vital DX 営業インタビュー結果 ===',
-      '',
-      '【訪問日】' + (d.visit_date || '-'),
-      '【アメニティ担当者】' + (d.sales_rep || '-'),
-      '【施設名】' + (d.facility_name || '-'),
-      '【面談相手】' + (d.contact_name || '-') + ' ' + (d.contact_title || ''),
-      '',
-      '--- A. 製品理解確認 ---',
-      '4指標確認: ' + (d.confirm1 ? '✓ 確認済' : '未確認'),
-      '医療機器でない旨: ' + (d.confirm2 ? '✓ 確認済' : '未確認'),
-      '',
-      '--- B. 施設情報 ---',
-      '施設種別: ' + (d.facility_type || '-'),
-      'ベッド数: ' + (d.bed_count || '-'),
-      '利用者数: ' + (d.user_count || '-'),
-      'スタッフ数: ' + (d.staff_count || '-'),
-      'アメニティ取引状況: ' + (d.amenity_relation || '-'),
-      '',
-      '--- C. バイタル測定実態 ---',
-      '測定方法: ' + arr(d.measure_method),
-      '測定頻度: ' + (d.measure_freq || '-'),
-      '記録方法: ' + (d.record_method || '-'),
-      '介護記録ソフト: ' + (d.care_software || '-') + (d.care_software_other ? ' (' + d.care_software_other + ')' : ''),
-      '電子カルテ: ' + (d.emr || '-') + (d.emr_name ? ' (' + d.emr_name + ')' : ''),
-      '',
-      '--- D. 課題・ニーズ ---',
-      '課題: ' + arr(d.pain_point),
-      '課題詳細: ' + (d.pain_point_detail || '-'),
-      'DX方針: ' + (d.dx_stance || '-'),
-      '競合製品: ' + (d.competitor_name || '-'),
-      '',
-      '--- E. 予算・意思決定 ---',
-      '決裁ライン: ' + (d.decision_maker || '-'),
-      '予算策定時期: ' + (d.budget_timing || '-'),
-      '補助金活用: ' + (d.subsidy || '-'),
-      '導入想定時期: ' + (d.timeline || '-'),
-      '',
-      '--- F. インフラ ---',
-      'Wi-Fi: ' + (d.wifi || '-'),
-      'デバイス利用: ' + (d.device_use || '-'),
-      'デバイス貸出: ' + (d.device_provision || '-'),
-      '',
-      '--- G. 営業担当評価 ---',
-      '総合評価: ' + (d.rank || '-'),
-      '商談反応: ' + (d.reaction || '-'),
-      'ネクストアクション: ' + (d.next_action || '-'),
-      'その他: ' + (d.memo || '-')
-    ].join('\n');
-  }
+      // カスタムフィールド（Zoho CRM側で事前作成が必要）
+      Visit_Date:              raw.visit_date         || '',
+      Sales_Rep:               raw.sales_rep          || '',
+      Facility_Type:           raw.facility_type      || '',
+      Bed_Count:               raw.bed_count          || '',
+      User_Count:              raw.user_count         || '',
+      Staff_Count:             raw.staff_count        || '',
+      Amenity_Relation:        raw.amenity_relation   || '',
+      Measure_Method:          joinArr(raw.measure_method),
+      Measure_Freq:            raw.measure_freq       || '',
+      Record_Method:           raw.record_method      || '',
+      Care_Software:           raw.care_software      || '',
+      Care_Software_Other:     raw.care_software_other|| '',
+      EMR:                     raw.emr                || '',
+      EMR_Name:                raw.emr_name           || '',
+      Pain_Point:              joinArr(raw.pain_point),
+      Pain_Point_Detail:       raw.pain_point_detail  || '',
+      DX_Stance:               raw.dx_stance          || '',
+      Competitor:              raw.competitor         || '',
+      Competitor_Name:         raw.competitor_name    || '',
+      Decision_Maker:          raw.decision_maker     || '',
+      Budget_Timing:           raw.budget_timing      || '',
+      Subsidy:                 raw.subsidy            || '',
+      Timeline:                raw.timeline           || '',
+      WiFi:                    raw.wifi               || '',
+      Device_Use:              raw.device_use         || '',
+      Device_Provision:        raw.device_provision   || '',
+      Rank:                    raw.rank               || '',
+      Reaction:                raw.reaction           || '',
+      Next_Action:             raw.next_action        || '',
+      Memo:                    raw.memo               || '',
+      // 確認チェック
+      Confirm_4Indicators:     raw.confirm1 ? '確認済' : '未確認',
+      Confirm_Not_Medical:     raw.confirm2 ? '確認済' : '未確認',
+      Video_Watched:           raw.video1  ? '視聴済' : '未視聴',
+      Video_Understood:        raw.video2  ? '理解済' : '未確認',
+      Video_Explainable:       raw.video3  ? '説明可' : '未確認',
+    };
+
+    // 送信ボタンをローディング状態に
+    const submitBtn = document.querySelector('.btn-submit');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ 送信中...';
+    submitBtn.disabled = true;
+
+    // Step1: Refresh TokenでAccess Tokenを取得
+    const tokenParams = new URLSearchParams({
+      grant_type:    'refresh_token',
+      client_id:     ZOHO_CONFIG.clientId,
+      client_secret: ZOHO_CONFIG.clientSecret,
+      refresh_token: ZOHO_CONFIG.refreshToken,
+    });
+
+    fetch(ZOHO_CONFIG.accountsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: tokenParams.toString(),
+    })
+    .then(res => res.json())
+    .then(tokenData => {
+      if (!tokenData.access_token) {
+        throw new Error('Access Token取得失敗: ' + JSON.stringify(tokenData));
+      }
+      const accessToken = tokenData.access_token;
+
+      // Step2: Zoho CRM Leadsにリードを登録
+      return fetch(ZOHO_CONFIG.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Zoho-oauthtoken ' + accessToken,
+          'Content-Type':  'application/json',
+        },
+        body: JSON.stringify({ data: [leadData] }),
+      });
+    })
+    .then(res => res.json())
+    .then(result => {
+      console.log('Zoho CRM response:', result);
+      const status = result.data && result.data[0] && result.data[0].status;
+      if (status === 'success' || status === 'duplicate') {
+        document.getElementById('mainForm').style.display = 'none';
+        document.getElementById('submitBar').style.display = 'none';
+        document.getElementById('successScreen').classList.add('visible');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        throw new Error('CRM登録エラー: ' + JSON.stringify(result));
+      }
+    })
+    .catch(err => {
+      console.error('送信エラー:', err);
+      submitBtn.innerHTML = originalBtnText;
+      submitBtn.disabled = false;
+      alert('送信中にエラーが発生しました。\n\n' + err.message + '\n\nネットワーク接続またはAPI設定をご確認ください。');
+    });
+  });
 
   function resetForm() {
     document.getElementById('mainForm').reset();
@@ -1503,7 +1578,5 @@
   // Init
   updateProgress();
 </script>
-<!-- Zoho Analytics Tracking（削除不可） -->
-<script id='wf_anal' src='https://crm.zohopublic.jp/crm/WebFormAnalyticsServeServlet?rid=01029a94d7d49c402c0d82515f3b9c05690ba2ed6c7485fec1236e3dd850dabc6335bc9431f6c7a7a3e0482eb58f55c9gid9a0f717500674c02eb84080dd8e736121d71e028900522ac7440d114e3797ae4gid23f02f5b969061de204cff83a8b87df52af50703cf28fd78eb078346db553bbfgid60e9f5c1508ac4f27f0e954c45a5147fb227368ded3ffc3a800151c5752b0282&tw=29d71bd022709c7da19b0ab2a89dda64e96bf90c42a208492f32f315e14bdf97'></script>
 </body>
 </html>
