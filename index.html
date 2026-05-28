@@ -1421,147 +1421,180 @@
       return;
     }
 
-    // ============================================================
-    //  ▼▼▼ Zoho CRM API 設定（セットアップ手順書を参照）▼▼▼
-    // ============================================================
-    const ZOHO_CONFIG = {
-      clientId:     '1000.SY62U6NNQ7OWCAE8XRBGOPAA1EISSB',
-      clientSecret: '1b8c4aca66e2688808372e40789521459e7fb9ebec',
-      refreshToken: '1000.03ccc3aee3c2bfb0a5a758b0a073f2b5.b66188e346a17d925c26f34520f23692',
-      // Zohoアカウントのデータセンターに合わせて変更
-      // JP/AS: accounts.zoho.jp / US: accounts.zoho.com / EU: accounts.zoho.eu
-      accountsUrl:  'https://accounts.zoho.jp/oauth/v2/token',
-      apiUrl:       'https://www.zohoapis.jp/crm/v7/Leads',
-    };
-    // ============================================================
-
-    // チェックボックスはFormDataに含まれないため個別処理
-    const checkboxNames = ['confirm1', 'confirm2', 'video1', 'video2', 'video3'];
-
-    // フォームデータ収集
+    // Collect data (handle multi-value checkboxes)
     const formData = new FormData(this);
-    const raw = {};
+    const data = {};
     for (let [key, value] of formData.entries()) {
-      if (raw[key]) {
-        if (Array.isArray(raw[key])) raw[key].push(value);
-        else raw[key] = [raw[key], value];
+      if (data[key]) {
+        if (Array.isArray(data[key])) data[key].push(value);
+        else data[key] = [data[key], value];
       } else {
-        raw[key] = value;
+        data[key] = value;
       }
     }
-    checkboxNames.forEach(name => {
-      const el = document.getElementById(name);
-      raw[name] = el && el.checked ? true : false;
-    });
 
-    // 複数選択フィールドを文字列に変換
-    const joinArr = v => Array.isArray(v) ? v.join('、') : (v || '');
+    // ===== ZOHO CRM WebToLead 送信 =====
+    submitToZohoCRM(data);
 
-    // Zoho CRM Leads フィールドへのマッピング
-    // ※ Last_Name は Zoho CRM の必須フィールド
-    const leadData = {
-      // 基本情報
-      Last_Name:         raw.facility_name  || '施設名未入力',
-      First_Name:        raw.contact_name   || '',
-      Title:             raw.contact_title  || '',
-      Company:           raw.facility_name  || '',
-      Lead_Source:       'アメニティ営業',
+    // Show success screen
+    document.getElementById('mainForm').style.display = 'none';
+    document.getElementById('submitBar').style.display = 'none';
+    document.getElementById('successScreen').classList.add('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 
-      // カスタムフィールド（Zoho CRM側で事前作成が必要）
-      Visit_Date:              raw.visit_date         || '',
-      Sales_Rep:               raw.sales_rep          || '',
-      Facility_Type:           raw.facility_type      || '',
-      Bed_Count:               raw.bed_count          || '',
-      User_Count:              raw.user_count         || '',
-      Staff_Count:             raw.staff_count        || '',
-      Amenity_Relation:        raw.amenity_relation   || '',
-      Measure_Method:          joinArr(raw.measure_method),
-      Measure_Freq:            raw.measure_freq       || '',
-      Record_Method:           raw.record_method      || '',
-      Care_Software:           raw.care_software      || '',
-      Care_Software_Other:     raw.care_software_other|| '',
-      EMR:                     raw.emr                || '',
-      EMR_Name:                raw.emr_name           || '',
-      Pain_Point:              joinArr(raw.pain_point),
-      Pain_Point_Detail:       raw.pain_point_detail  || '',
-      DX_Stance:               raw.dx_stance          || '',
-      Competitor:              raw.competitor         || '',
-      Competitor_Name:         raw.competitor_name    || '',
-      Decision_Maker:          raw.decision_maker     || '',
-      Budget_Timing:           raw.budget_timing      || '',
-      Subsidy:                 raw.subsidy            || '',
-      Timeline:                raw.timeline           || '',
-      WiFi:                    raw.wifi               || '',
-      Device_Use:              raw.device_use         || '',
-      Device_Provision:        raw.device_provision   || '',
-      Rank:                    raw.rank               || '',
-      Reaction:                raw.reaction           || '',
-      Next_Action:             raw.next_action        || '',
-      Memo:                    raw.memo               || '',
-      // 確認チェック
-      Confirm_4Indicators:     raw.confirm1 ? '確認済' : '未確認',
-      Confirm_Not_Medical:     raw.confirm2 ? '確認済' : '未確認',
-      Video_Watched:           raw.video1  ? '視聴済' : '未視聴',
-      Video_Understood:        raw.video2  ? '理解済' : '未確認',
-      Video_Explainable:       raw.video3  ? '説明可' : '未確認',
+  // ===== ZOHO CRM WebToLead 送信関数 =====
+  function submitToZohoCRM(data) {
+    // iframeでバックグラウンド送信（ページ遷移なし）
+    const iframeName = 'zoho_frame_' + Date.now();
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    // Zoho用フォームを動的生成
+    const zohoForm = document.createElement('form');
+    zohoForm.method = 'POST';
+    zohoForm.action = 'https://crm.zoho.jp/crm/WebToLeadForm';
+    zohoForm.acceptCharset = 'UTF-8';
+    zohoForm.target = iframeName;
+    zohoForm.style.display = 'none';
+
+    // Zoho必須の認証・隠しフィールド（削除不可）
+    const zohoHidden = {
+      'xnQsjsdp': 'dedc439d6d9e2299c80009436c6dbbeef57751f3a453e24201a6bf4b24d0058b',
+      'zc_gad': '',
+      'xmIwtLD': '88caf7dbf2760d0bbd91931f18aaaaa03c1d854d70b5c3fe94e90fc3f0c7591137e88987191e38e622dbcf2858c4105c',
+      'actionType': 'TGVhZHM=',
+      'returnURL': 'https://packy-the3rd.github.io/vitaldx-interview-form/',
+      'aG9uZXlwb3Q': ''
     };
 
-    // 送信ボタンをローディング状態に
-    const submitBtn = document.querySelector('.btn-submit');
-    const originalBtnText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '⏳ 送信中...';
-    submitBtn.disabled = true;
+    // フォームデータをZoho CRMフィールドにマッピング
+    const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
+    const zohoFields = {
+      ...zohoHidden,
+      // 標準フィールド
+      'Company':     data.facility_name || '',
+      'Last Name':   data.contact_name || data.sales_rep || '担当者',
+      'Lead Source': 'アメニティ営業',
+      'Description': buildZohoDescription(data, arr),
 
-    // Step1: Refresh TokenでAccess Tokenを取得
-    const tokenParams = new URLSearchParams({
-      grant_type:    'refresh_token',
-      client_id:     ZOHO_CONFIG.clientId,
-      client_secret: ZOHO_CONFIG.clientSecret,
-      refresh_token: ZOHO_CONFIG.refreshToken,
+      // カスタムフィールド
+      'Visit_Date':          data.visit_date || '',
+      'Sales_Rep':           data.sales_rep || '',
+      'Facility_Type':       data.facility_type || '',
+      'Bed_Count':           data.bed_count || '',
+      'User_Count':          data.user_count || '',
+      'Staff_Count':         data.staff_count || '',
+      'Amenity_Relation':    data.amenity_relation || '',
+      'Measure_Method':      arr(data.measure_method),
+      'Measure_Freq':        data.measure_freq || '',
+      'Record_Method':       data.record_method || '',
+      'Care_Software':       data.care_software || '',
+      'Care_Software_Other': data.care_software_other || '',
+      'EMR':                 data.emr || '',
+      'EMR_Name':            data.emr_name || '',
+      'Pain_Point':          arr(data.pain_point),
+      'Pain_Point_Detail':   data.pain_point_detail || '',
+      'DX_Stance':           data.dx_stance || '',
+      'Competitor':          data.competitor || '',
+      'Competitor_Name':     data.competitor_name || '',
+      'Decision_Maker':      data.decision_maker || '',
+      'Budget_Timing':       data.budget_timing || '',
+      'Subsidy':             data.subsidy || '',
+      'Timeline':            data.timeline || '',
+      'WiFi':                data.wifi || '',
+      'Device_Use':          data.device_use || '',
+      'Device_Provision':    data.device_provision || '',
+      'Rank':                data.rank || '',
+      'Reaction':            data.reaction || '',
+      'Next_Action':         data.next_action || '',
+      'Memo':                data.memo || '',
+      'Confirm_4Indicators': data.confirm1 ? '確認済' : '未確認',
+      'Confirm_Not_Medical': data.confirm2 ? '確認済' : '未確認',
+      'Video_Watched':       data.video1 ? '視聴済' : '未視聴',
+      'Video_Understood':    data.video2 ? '理解済' : '未確認',
+      'Video_Explainable':   data.video3 ? '説明可' : '未確認'
+    };
+
+    // フィールドをフォームに追加
+    Object.entries(zohoFields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value || '';
+      zohoForm.appendChild(input);
     });
 
-    fetch(ZOHO_CONFIG.accountsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: tokenParams.toString(),
-    })
-    .then(res => res.json())
-    .then(tokenData => {
-      if (!tokenData.access_token) {
-        throw new Error('Access Token取得失敗: ' + JSON.stringify(tokenData));
-      }
-      const accessToken = tokenData.access_token;
+    document.body.appendChild(zohoForm);
+    document.charset = 'UTF-8';
+    zohoForm.submit();
 
-      // Step2: Zoho CRM Leadsにリードを登録
-      return fetch(ZOHO_CONFIG.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Zoho-oauthtoken ' + accessToken,
-          'Content-Type':  'application/json',
-        },
-        body: JSON.stringify({ data: [leadData] }),
-      });
-    })
-    .then(res => res.json())
-    .then(result => {
-      console.log('Zoho CRM response:', result);
-      const status = result.data && result.data[0] && result.data[0].status;
-      if (status === 'success' || status === 'duplicate') {
-        document.getElementById('mainForm').style.display = 'none';
-        document.getElementById('submitBar').style.display = 'none';
-        document.getElementById('successScreen').classList.add('visible');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        throw new Error('CRM登録エラー: ' + JSON.stringify(result));
-      }
-    })
-    .catch(err => {
-      console.error('送信エラー:', err);
-      submitBtn.innerHTML = originalBtnText;
-      submitBtn.disabled = false;
-      alert('送信中にエラーが発生しました。\n\n' + err.message + '\n\nネットワーク接続またはAPI設定をご確認ください。');
-    });
-  });
+    // 送信後クリーンアップ（5秒後）
+    setTimeout(() => {
+      try { document.body.removeChild(zohoForm); } catch(e) {}
+      try { document.body.removeChild(iframe); } catch(e) {}
+    }, 5000);
+  }
+
+  // ===== Zoho Description 組み立て関数 =====
+  function buildZohoDescription(d, arr) {
+    return [
+      '=== Vital DX 営業インタビュー結果 ===',
+      '',
+      '【訪問日】' + (d.visit_date || '-'),
+      '【アメニティ担当者】' + (d.sales_rep || '-'),
+      '【施設名】' + (d.facility_name || '-'),
+      '【面談相手】' + (d.contact_name || '-') + ' ' + (d.contact_title || ''),
+      '',
+      '--- A. 製品理解確認 ---',
+      '4指標確認: ' + (d.confirm1 ? '✓ 確認済' : '未確認'),
+      '医療機器でない旨: ' + (d.confirm2 ? '✓ 確認済' : '未確認'),
+      '',
+      '--- A2. 製品ビデオ確認 ---',
+      '動画視聴: ' + (d.video1 ? '✓ 視聴済' : '未視聴'),
+      '機能理解: ' + (d.video2 ? '✓ 理解済' : '未確認'),
+      '説明可能: ' + (d.video3 ? '✓ 説明可' : '未確認'),
+      '',
+      '--- B. 施設情報 ---',
+      '施設種別: ' + (d.facility_type || '-'),
+      'ベッド数: ' + (d.bed_count || '-'),
+      '利用者数: ' + (d.user_count || '-'),
+      'スタッフ数: ' + (d.staff_count || '-'),
+      'アメニティ取引状況: ' + (d.amenity_relation || '-'),
+      '',
+      '--- C. バイタル測定実態 ---',
+      '測定方法: ' + arr(d.measure_method),
+      '測定頻度: ' + (d.measure_freq || '-'),
+      '記録方法: ' + (d.record_method || '-'),
+      '介護記録ソフト: ' + (d.care_software || '-') + (d.care_software_other ? ' (' + d.care_software_other + ')' : ''),
+      '電子カルテ: ' + (d.emr || '-') + (d.emr_name ? ' (' + d.emr_name + ')' : ''),
+      '',
+      '--- D. 課題・ニーズ ---',
+      '課題: ' + arr(d.pain_point),
+      '課題詳細: ' + (d.pain_point_detail || '-'),
+      'DX方針: ' + (d.dx_stance || '-'),
+      '競合製品: ' + (d.competitor_name || '-'),
+      '',
+      '--- E. 予算・意思決定 ---',
+      '決裁ライン: ' + (d.decision_maker || '-'),
+      '予算策定時期: ' + (d.budget_timing || '-'),
+      '補助金活用: ' + (d.subsidy || '-'),
+      '導入想定時期: ' + (d.timeline || '-'),
+      '',
+      '--- F. インフラ ---',
+      'Wi-Fi: ' + (d.wifi || '-'),
+      'デバイス利用: ' + (d.device_use || '-'),
+      'デバイス貸出: ' + (d.device_provision || '-'),
+      '',
+      '--- G. 営業担当評価 ---',
+      '総合評価: ' + (d.rank || '-'),
+      '商談反応: ' + (d.reaction || '-'),
+      'ネクストアクション: ' + (d.next_action || '-'),
+      'その他: ' + (d.memo || '-')
+    ].join('\n');
+  }
 
   function resetForm() {
     document.getElementById('mainForm').reset();
@@ -1578,5 +1611,7 @@
   // Init
   updateProgress();
 </script>
+<!-- Zoho Analytics Tracking（削除不可） -->
+<script id='wf_anal' src='https://crm.zohopublic.jp/crm/WebFormAnalyticsServeServlet?rid=01029a94d7d49c402c0d82515f3b9c05690ba2ed6c7485fec1236e3dd850dabc6335bc9431f6c7a7a3e0482eb58f55c9gid9a0f717500674c02eb84080dd8e736121d71e028900522ac7440d114e3797ae4gid23f02f5b969061de204cff83a8b87df52af50703cf28fd78eb078346db553bbfgid60e9f5c1508ac4f27f0e954c45a5147fb227368ded3ffc3a800151c5752b0282&tw=29d71bd022709c7da19b0ab2a89dda64e96bf90c42a208492f32f315e14bdf97'></script>
 </body>
 </html>
