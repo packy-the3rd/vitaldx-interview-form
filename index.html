@@ -1478,7 +1478,7 @@
       'Company':     data.facility_name || '',
       'Last Name':   data.contact_name || data.sales_rep || '担当者',
       'Lead Source': 'アメニティ営業',
-      'LEADCF10':    data.contact_title || '',          // 役職・肩書き
+      'LEADCF10':    data.contact_title || document.getElementById('contact_title')?.value || '',  // 役職・肩書き
 
       // カスタムフィールド（Zoho内部名 LEADCF）
       'LEADCF54':    (data.visit_date || '').replace(/-/g, '/'),  // Visit_Date（YYYY/MM/DD形式に変換）
