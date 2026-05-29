@@ -1046,9 +1046,9 @@
         <div class="field-group">
           <div class="field-label"><span class="field-num">12</span>類似製品の導入・検討履歴</div>
           <div class="options-grid">
-            <label class="opt-item"><input type="radio" name="competitor"> 他社の類似製品を導入済み</label>
-            <label class="opt-item"><input type="radio" name="competitor"> 他社を検討中（比較中）</label>
-            <label class="opt-item"><input type="radio" name="competitor"> 初めての検討</label>
+            <label class="opt-item"><input type="radio" name="competitor" value="導入済み"> 他社の類似製品を導入済み</label>
+            <label class="opt-item"><input type="radio" name="competitor" value="検討中"> 他社を検討中（比較中）</label>
+            <label class="opt-item"><input type="radio" name="competitor" value="初めて"> 初めての検討</label>
           </div>
           <input type="text" name="competitor_name" placeholder="競合製品名・検討中サービス名（わかれば）" style="margin-top:8px;">
         </div>
@@ -1480,7 +1480,7 @@
       'Lead Source': 'アメニティ営業',
 
       // カスタムフィールド（Zoho内部名 LEADCF）
-      'LEADCF54':    data.visit_date || '',           // Visit_Date
+      'LEADCF54':    (data.visit_date || '').replace(/-/g, '/'),  // Visit_Date（YYYY/MM/DD形式に変換）
       'LEADCF48':    data.sales_rep || '',             // Sales_Rep
       'LEADCF121':   data.facility_type || '',         // Facility_Type
       'LEADCF51':    data.bed_count || '',              // Bed_Count
