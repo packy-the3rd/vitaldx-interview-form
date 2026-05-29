@@ -1462,9 +1462,9 @@
 
     // Zoho必須の認証・隠しフィールド（削除不可）
     const zohoHidden = {
-      'xnQsjsdp': 'd7768e5871cc81341abc13dfc3bd7e69d52053e974e06db932c245d37dc0ffda',
+      'xnQsjsdp': '34fc9922a3a13fcb333bdd27b77731d5473c6802fcc99b3c704673af49d6d039',
       'zc_gad': '',
-      'xmIwtLD': '2e6bb1e7c87059abbe5c3303da1c737dedfc2df945f2e200d1977fe8b7f3526234e431a7931008cc750e22e0eb74a830',
+      'xmIwtLD': 'e44a067493d20d883b1b8ad79a86614db63b9fd0d7de120104498553470e9db9e46cb81b40b61df06b82707c152afd3b',
       'actionType': 'TGVhZHM=',
       'returnURL': 'https://packy-the3rd.github.io/vitaldx-interview-form/',
       'aG9uZXlwb3Q': ''
@@ -1478,7 +1478,7 @@
       'Company':     data.facility_name || '',
       'Last Name':   data.contact_name || data.sales_rep || '担当者',
       'Lead Source': 'アメニティ営業',
-      'Designation': data.contact_title || '',          // 役職・肩書き
+      'LEADCF10':    data.contact_title || '',          // 役職・肩書き
 
       // カスタムフィールド（Zoho内部名 LEADCF）
       'LEADCF54':    (data.visit_date || '').replace(/-/g, '/'),  // Visit_Date（YYYY/MM/DD形式に変換）
