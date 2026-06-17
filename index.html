@@ -10,29 +10,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- html2pdf.js for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
-  <!-- EmailJS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
-    // =============================================================
-    // EmailJS 初期設定（要設定）
-    // 1. https://www.emailjs.com/ で無料アカウント作成
-    // 2. Email Service を追加（Gmail等）→ Service ID を取得
-    // 3. Email Template を作成（下記テンプレート変数を使用）:
-    //    - {{to_email}}     : 宛先メールアドレス
-    //    - {{to_name}}      : 宛先担当者名
-    //    - {{facility_name}}: 施設名
-    //    - {{visit_date}}   : 訪問日
-    //    - {{summary}}      : インタビュー内容の要約
-    //    - {{pdf_content}}  : PDFファイル（Base64）
-    // 4. Public Key を取得
-    // =============================================================
-    const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // ← 要変更
-    const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // ← 要変更
-    const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';   // ← 要変更
-
-    if (EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-    }
+    // メール送信API（Xserver上のPHPスクリプト）
+    const EMAIL_API_URL = 'https://vital-dx.com/api/interview/send_email.php';  // ← Xserver設置先に合わせて変更
   </script>
   <style>
     /* ===== PASSWORD SCREEN ===== */
@@ -2147,30 +2127,33 @@
   }
 
   async function sendEmailWithPDF(data, pdfBase64) {
-    // Check if EmailJS is configured
-    if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
-      console.warn('EmailJS is not configured. Skipping email send.');
-      console.log('To enable email: set EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID');
-      // Fallback: auto-download the PDF instead
-      downloadPDFFromBase64(pdfBase64, data);
-      return;
-    }
-
     const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
-    const templateParams = {
+
+    const payload = {
       to_email:      data.sales_rep_email,
       to_name:       data.sales_rep,
       facility_name: data.facility_name,
       visit_date:    data.visit_date,
       summary:       buildZohoDescription(data, arr),
-      pdf_content:   pdfBase64
+      pdf_base64:    pdfBase64
     };
 
     try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+      const response = await fetch(EMAIL_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || result.message || 'Server error');
+      }
+
       console.log('Email sent successfully to:', data.sales_rep_email);
     } catch(e) {
-      console.error('EmailJS error:', e);
+      console.error('Email API error:', e);
       // Fallback: download PDF
       downloadPDFFromBase64(pdfBase64, data);
       throw new Error('メール送信に失敗しました。PDFはダウンロードされました。');
