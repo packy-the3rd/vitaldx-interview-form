@@ -140,6 +140,8 @@ try {
     // 送信元・送信先
     $mail->setFrom($GMAIL_ADDRESS, $FROM_NAME);
     $mail->addAddress($to_email, $to_name);
+    // CC: バイタルDX社に控えを送信
+    $mail->addCC('info@vital-dx.com', '株式会社バイタルDX');
 
     // 件名
     $mail->Subject = "【Vital DX】営業インタビューシート - {$facility_name} ({$visit_date})";

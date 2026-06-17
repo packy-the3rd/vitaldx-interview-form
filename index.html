@@ -1808,21 +1808,13 @@
       loadingStep.textContent = '① PDFを生成中...';
       const pdfBase64 = await generatePDFBase64(data);
 
-      // Step 2: Send email with PDF
+      // Step 2: Send email with PDF (CC: info@vital-dx.com)
       loadingStep.textContent = '② メールを送信中...';
       await sendEmailWithPDF(data, pdfBase64);
 
-      // Step 3: Submit to Zoho CRM
-      loadingStep.textContent = '③ CRMに保存中...';
-      submitToZohoCRM(data);
-
-      // Wait a bit for Zoho submission
-      await new Promise(r => setTimeout(r, 1000));
-
     } catch (err) {
       console.error('Submit error:', err);
-      // Even if email fails, still show success (Zoho submission may have succeeded)
-      alert('➠ メール送信に失敗しましたが、CRMへの保存は完了しています。\n\nエラー: ' + err.message + '\n\n※ PDF出力ボタンから手動でPDFを保存してください。');
+      alert('➠ メール送信に失敗しました。\n\nエラー: ' + err.message + '\n\n※ PDF出力ボタンから手動でPDFを保存してください。');
     } finally {
       overlay.classList.remove('visible');
     }
@@ -1834,102 +1826,8 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ===== ZOHO CRM WebToLead 送信関数 =====
-  function submitToZohoCRM(data) {
-    // iframeでバックグラウンド送信（ページ遷移なし）
-    const iframeName = 'zoho_frame_' + Date.now();
-    const iframe = document.createElement('iframe');
-    iframe.name = iframeName;
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
 
-    // Zoho用フォームを動的生成
-    const zohoForm = document.createElement('form');
-    zohoForm.method = 'POST';
-    zohoForm.action = 'https://crm.zoho.jp/crm/WebToLeadForm';
-    zohoForm.acceptCharset = 'UTF-8';
-    zohoForm.target = iframeName;
-    zohoForm.style.display = 'none';
-
-    // Zoho必須の認証・隠しフィールド（削除不可）
-    const zohoHidden = {
-      'xnQsjsdp': '34fc9922a3a13fcb333bdd27b77731d5473c6802fcc99b3c704673af49d6d039',
-      'zc_gad': '',
-      'xmIwtLD': 'e44a067493d20d883b1b8ad79a86614db63b9fd0d7de120104498553470e9db9e46cb81b40b61df06b82707c152afd3b',
-      'actionType': 'TGVhZHM=',
-      'returnURL': 'https://packy-the3rd.github.io/vitaldx-interview-form/',
-      'aG9uZXlwb3Q': ''
-    };
-
-    // フォームデータをZoho CRMフィールドにマッピング（LEADCF = Zoho内部名）
-    const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
-    const zohoFields = {
-      ...zohoHidden,
-      // 標準フィールド
-      'Company':     data.facility_name || '',
-      'Last Name':   data.contact_name || data.sales_rep || '担当者',
-      'Lead Source': 'アメニティ営業',
-      'LEADCF10':    data.contact_title || document.getElementById('contact_title')?.value || '',  // 役職・肩書き
-
-      // カスタムフィールド（Zoho内部名 LEADCF）
-      'LEADCF54':    (data.visit_date || '').replace(/-/g, '/'),  // Visit_Date（YYYY/MM/DD形式に変換）
-      'LEADCF48':    data.sales_rep || '',             // Sales_Rep
-      'LEADCF121':   data.facility_type || '',         // Facility_Type
-      'LEADCF51':    data.bed_count || '',              // Bed_Count
-      'LEADCF52':    data.user_count || '',             // User_Count
-      'LEADCF53':    data.staff_count || '',            // Staff_Count
-      'LEADCF122':   data.amenity_relation || '',      // Amenity_Relation
-      'LEADCF25':    arr(data.measure_method),         // Measure_Method
-      'LEADCF33':    data.measure_freq || '',           // Measure_Freq
-      'LEADCF38':    data.record_method || '',          // Record_Method
-      'LEADCF43':    data.care_software || '',          // Care_Software
-      'LEADCF49':    data.care_software_other || '',    // Care_Software_Other
-      'LEADCF41':    data.emr || '',                    // EMR
-      'LEADCF50':    data.emr_name || '',               // EMR_Name
-      'LEADCF23':    arr(data.pain_point),             // Pain_Point
-      'LEADCF28':    data.pain_point_detail || '',      // Pain_Point_Detail
-      'LEADCF22':    data.dx_stance || '',              // DX_Stance
-      'LEADCF26':    data.competitor || '',             // Competitor
-      'LEADCF35':    data.competitor_name || '',        // Competitor_Name
-      'LEADCF24':    data.decision_maker || '',         // Decision_Maker
-      'LEADCF29':    data.budget_timing || '',          // Budget_Timing
-      'LEADCF27':    data.subsidy || '',                // Subsidy
-      'LEADCF34':    data.timeline || '',               // Timeline
-      'LEADCF31':    data.wifi || '',                   // WiFi
-      'LEADCF40':    data.device_use || '',             // Device_Use
-      'LEADCF37':    data.device_provision || '',       // Device_Provision
-      'LEADCF44':    data.rank || '',                   // Rank
-      'LEADCF30':    data.reaction || '',               // Reaction
-      'LEADCF32':    data.next_action || '',            // Next_Action
-      'LEADCF36':    data.memo || '',                   // Memo
-      'LEADCF39':    data.confirm1 ? '確認済' : '未確認',  // Confirm_4Indicators
-      'LEADCF42':    data.confirm2 ? '確認済' : '未確認',  // Confirm_Not_Medical
-      'LEADCF45':    data.video1 ? '視聴済' : '未視聴',    // Video_Watched
-      'LEADCF47':    data.video2 ? '理解済' : '未確認',    // Video_Understood
-      'LEADCF21':    data.video3 ? '説明可' : '未確認'     // Video_Explainable
-    };
-
-    // フィールドをフォームに追加
-    Object.entries(zohoFields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value || '';
-      zohoForm.appendChild(input);
-    });
-
-    document.body.appendChild(zohoForm);
-    document.charset = 'UTF-8';
-    zohoForm.submit();
-
-    // 送信後クリーンアップ（5秒後）
-    setTimeout(() => {
-      try { document.body.removeChild(zohoForm); } catch(e) {}
-      try { document.body.removeChild(iframe); } catch(e) {}
-    }, 5000);
-  }
-
-  // ===== Zoho Description 組み立て関数 =====
+  // ===== メール本文組み立て関数 =====
   function buildZohoDescription(d, arr) {
     return [
       '=== Vital DX 営業インタビュー結果 ===',
