@@ -8,6 +8,32 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- html2pdf.js for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    // =============================================================
+    // EmailJS 初期設定（要設定）
+    // 1. https://www.emailjs.com/ で無料アカウント作成
+    // 2. Email Service を追加（Gmail等）→ Service ID を取得
+    // 3. Email Template を作成（下記テンプレート変数を使用）:
+    //    - {{to_email}}     : 宛先メールアドレス
+    //    - {{to_name}}      : 宛先担当者名
+    //    - {{facility_name}}: 施設名
+    //    - {{visit_date}}   : 訪問日
+    //    - {{summary}}      : インタビュー内容の要約
+    //    - {{pdf_content}}  : PDFファイル（Base64）
+    // 4. Public Key を取得
+    // =============================================================
+    const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // ← 要変更
+    const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // ← 要変更
+    const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';   // ← 要変更
+
+    if (EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
+  </script>
   <style>
     /* ===== PASSWORD SCREEN ===== */
     #pw-screen {
@@ -918,6 +944,58 @@
       margin-top: 4px;
     }
 
+    /* ===== LOADING OVERLAY ===== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+    }
+    .loading-overlay.visible {
+      display: flex;
+    }
+    .loading-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 48px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 380px;
+    }
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #E5E7EB;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .loading-msg {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .loading-step {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 600;
+      margin-top: 12px;
+    }
+
     /* ===== TOOLTIP ===== */
     .hint {
       font-size: 11px;
@@ -954,6 +1032,16 @@
   </style>
 </head>
 <body>
+
+<!-- ===== LOADING OVERLAY ===== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">送信中です...</div>
+    <div class="loading-msg">PDFを生成し、メールで送信しています。<br>しばらくお待ちください。</div>
+    <div class="loading-step" id="loadingStep"></div>
+  </div>
+</div>
 
 <!-- ===== PASSWORD SCREEN ===== -->
 <div id="pw-screen">
@@ -1686,7 +1774,7 @@
   });
 
   // ===== FORM SUBMIT =====
-  document.getElementById('mainForm').addEventListener('submit', function(e) {
+  document.getElementById('mainForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     // Validation
@@ -1698,11 +1786,13 @@
     const rankChecked = document.querySelector('[name="rank"]:checked');
     const visitDate = document.getElementById('visit_date').value;
     const salesRep = document.getElementById('sales_rep').value;
+    const salesRepEmail = document.getElementById('sales_rep_email').value;
     const facilityName = document.getElementById('facility_name').value;
 
     let errors = [];
     if (!visitDate) errors.push('訪問日');
     if (!salesRep.trim()) errors.push('アメニティ担当者名');
+    if (!salesRepEmail.trim()) errors.push('アメニティ担当者 Eメール');
     if (!facilityName.trim()) errors.push('施設名');
     if (!confirm1.checked) errors.push('製品理解①（4指標）の確認');
     if (!confirm2.checked) errors.push('製品理解②（医療機器でない）の確認');
@@ -1728,8 +1818,34 @@
       }
     }
 
-    // ===== ZOHO CRM WebToLead 送信 =====
-    submitToZohoCRM(data);
+    // Show loading overlay
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingStep = document.getElementById('loadingStep');
+    overlay.classList.add('visible');
+
+    try {
+      // Step 1: Generate PDF
+      loadingStep.textContent = '① PDFを生成中...';
+      const pdfBase64 = await generatePDFBase64(data);
+
+      // Step 2: Send email with PDF
+      loadingStep.textContent = '② メールを送信中...';
+      await sendEmailWithPDF(data, pdfBase64);
+
+      // Step 3: Submit to Zoho CRM
+      loadingStep.textContent = '③ CRMに保存中...';
+      submitToZohoCRM(data);
+
+      // Wait a bit for Zoho submission
+      await new Promise(r => setTimeout(r, 1000));
+
+    } catch (err) {
+      console.error('Submit error:', err);
+      // Even if email fails, still show success (Zoho submission may have succeeded)
+      alert('➠ メール送信に失敗しましたが、CRMへの保存は完了しています。\n\nエラー: ' + err.message + '\n\n※ PDF出力ボタンから手動でPDFを保存してください。');
+    } finally {
+      overlay.classList.remove('visible');
+    }
 
     // Show success screen
     document.getElementById('mainForm').style.display = 'none';
@@ -1903,7 +2019,181 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ===== PRINT / PDF OUTPUT =====
+  // ===== PDF GENERATION + EMAIL SEND =====
+  async function generatePDFBase64(data) {
+    const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
+
+    // Build a clean HTML document for PDF
+    const visitDate = data.visit_date || '-';
+    const salesRep = data.sales_rep || '-';
+    const facilityName = data.facility_name || '-';
+    const contactName = data.contact_name || '-';
+    const contactTitle = data.contact_title || '';
+
+    const pdfHTML = `
+      <div style="font-family: 'Noto Sans JP', sans-serif; padding: 24px; font-size: 11px; color: #1A1F36; line-height: 1.6;">
+        <div style="background: linear-gradient(135deg, #054D8A, #0A6EBD); color: white; padding: 18px 24px; border-radius: 10px; margin-bottom: 16px;">
+          <div style="font-size: 8px; opacity: 0.7; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px;">Vital DX rPPG Interview Sheet</div>
+          <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">営業インタビューシート</div>
+          <div style="font-size: 10px; opacity: 0.8;">訪問日: ${visitDate}　|　担当: ${salesRep}　|　印刷日: ${new Date().toLocaleDateString('ja-JP')}</div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 14px;">
+          <tr style="background: #F0F4F8;">
+            <td style="padding: 6px 10px; border: 1px solid #D1D5DB; font-weight: 600; width: 120px;">施設名</td>
+            <td style="padding: 6px 10px; border: 1px solid #D1D5DB;">${facilityName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 10px; border: 1px solid #D1D5DB; font-weight: 600; background: #F0F4F8;">面談相手</td>
+            <td style="padding: 6px 10px; border: 1px solid #D1D5DB;">${contactName} ${contactTitle}</td>
+          </tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">A. 製品理解確認</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px;">4指標確認</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.confirm1 ? '✓ 確認済' : '未確認'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">医療機器でない旨</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.confirm2 ? '✓ 確認済' : '未確認'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">動画視聴</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.video1 ? '✓ 視聴済' : '未視聴'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">機能理解</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.video2 ? '✓ 理解済' : '未確認'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">説明可能</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.video3 ? '✓ 説明可' : '未確認'}</td></tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">B. 施設基本情報</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px; background: #F0F4F8; font-weight: 600;">施設種別</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.facility_type || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">ベッド数</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.bed_count || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">利用者数</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.user_count || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">スタッフ数</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.staff_count || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">アメニティ取引</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.amenity_relation || '-'}</td></tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">C. バイタル測定実態</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px; background: #F0F4F8; font-weight: 600;">測定方法</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${arr(data.measure_method)}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">測定頻度</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.measure_freq || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">記録方法</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.record_method || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">介護記録ソフト</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.care_software || '-'}${data.care_software_other ? ' (' + data.care_software_other + ')' : ''}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">電子カルテ</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.emr || '-'}${data.emr_name ? ' (' + data.emr_name + ')' : ''}</td></tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">D. 課題・ニーズ</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px; background: #F0F4F8; font-weight: 600;">課題</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${arr(data.pain_point)}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">課題詳細</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.pain_point_detail || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">DX方針</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.dx_stance || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">競合製品</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.competitor_name || '-'}</td></tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">E. 予算・意思決定</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px; background: #F0F4F8; font-weight: 600;">決裁ライン</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.decision_maker || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">予算策定時期</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.budget_timing || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">補助金活用</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.subsidy || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">導入想定時期</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.timeline || '-'}</td></tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">F. インフラ</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px; background: #F0F4F8; font-weight: 600;">Wi-Fi</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.wifi || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">デバイス利用</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.device_use || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">デバイス責出</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.device_provision || '-'}</td></tr>
+        </table>
+
+        <div style="font-size: 12px; font-weight: 700; color: #054D8A; border-bottom: 2px solid #054D8A; padding-bottom: 3px; margin: 14px 0 8px;">G. 営業担当評価</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; width: 200px; background: #F0F4F8; font-weight: 600;">総合評価</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB; font-weight: 700; font-size: 14px;">${data.rank || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">商談反応</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.reaction || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">ネクストアクション</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.next_action || '-'}</td></tr>
+          <tr><td style="padding: 4px 10px; border: 1px solid #D1D5DB; background: #F0F4F8; font-weight: 600;">その他</td><td style="padding: 4px 10px; border: 1px solid #D1D5DB;">${data.memo || '-'}</td></tr>
+        </table>
+
+        <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #D1D5DB; font-size: 9px; color: #9CA3AF; text-align: center;">
+          © 株式会社バイタルDX　|　Vital DX rPPG 営業インタビューシート　|　社外秘
+        </div>
+      </div>
+    `;
+
+    // Create a temporary container
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = pdfHTML;
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '0';
+    document.body.appendChild(tempDiv);
+
+    const opt = {
+      margin:       [8, 8, 8, 8],
+      filename:     `VDX_Interview_${facilityName}_${visitDate}.pdf`,
+      image:        { type: 'jpeg', quality: 0.95 },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+      const pdfBlob = await html2pdf().set(opt).from(tempDiv).outputPdf('blob');
+      document.body.removeChild(tempDiv);
+
+      // Convert blob to base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(pdfBlob);
+      });
+    } catch(e) {
+      document.body.removeChild(tempDiv);
+      throw e;
+    }
+  }
+
+  async function sendEmailWithPDF(data, pdfBase64) {
+    // Check if EmailJS is configured
+    if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+      console.warn('EmailJS is not configured. Skipping email send.');
+      console.log('To enable email: set EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID');
+      // Fallback: auto-download the PDF instead
+      downloadPDFFromBase64(pdfBase64, data);
+      return;
+    }
+
+    const arr = (v) => Array.isArray(v) ? v.join(' / ') : (v || '-');
+    const templateParams = {
+      to_email:      data.sales_rep_email,
+      to_name:       data.sales_rep,
+      facility_name: data.facility_name,
+      visit_date:    data.visit_date,
+      summary:       buildZohoDescription(data, arr),
+      pdf_content:   pdfBase64
+    };
+
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+      console.log('Email sent successfully to:', data.sales_rep_email);
+    } catch(e) {
+      console.error('EmailJS error:', e);
+      // Fallback: download PDF
+      downloadPDFFromBase64(pdfBase64, data);
+      throw new Error('メール送信に失敗しました。PDFはダウンロードされました。');
+    }
+  }
+
+  function downloadPDFFromBase64(base64, data) {
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `VDX_Interview_${data.facility_name || 'report'}_${data.visit_date || 'date'}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
   function printForm() {
     // Inject print timestamp
     let stamp = document.querySelector('.print-header-stamp');
