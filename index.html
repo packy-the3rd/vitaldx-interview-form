@@ -847,6 +847,77 @@
       display: none;
     }
 
+    /* ===== AUTOCOMPLETE DROPDOWN ===== */
+    .ac-wrapper {
+      position: relative;
+    }
+    .ac-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1.5px solid var(--border-focus);
+      border-top: none;
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      z-index: 200;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .ac-dropdown.visible {
+      display: block;
+    }
+    .ac-item {
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.1s;
+      border-bottom: 1px solid #F3F4F6;
+    }
+    .ac-item:last-child {
+      border-bottom: none;
+    }
+    .ac-item:hover, .ac-item.active {
+      background: var(--primary-light);
+    }
+    .ac-item .ac-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .ac-item .ac-email {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 12px;
+    }
+    .ac-item .ac-delete {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-left: 8px;
+      transition: all 0.15s;
+    }
+    .ac-item .ac-delete:hover {
+      background: #FEE2E2;
+      color: #EF4444;
+    }
+    .ac-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
     /* ===== TOOLTIP ===== */
     .hint {
       font-size: 11px;
@@ -955,8 +1026,19 @@
           </div>
           <div class="field-group">
             <label for="sales_rep">アメニティ担当者名 <span class="required">必須</span></label>
-            <input type="text" id="sales_rep" name="sales_rep" placeholder="例：山田 太郎" required>
+            <div class="ac-wrapper">
+              <input type="text" id="sales_rep" name="sales_rep" placeholder="例：山田 太郎" required autocomplete="off">
+              <div class="ac-dropdown" id="acDropdown"></div>
+            </div>
+            <div class="ac-hint">💡 過去に入力した担当者名がリコメンドされます</div>
           </div>
+        </div>
+        <div class="field-group">
+          <label for="sales_rep_email">アメニティ担当者 Eメール <span class="required">必須</span></label>
+          <div class="ac-wrapper">
+            <input type="email" id="sales_rep_email" name="sales_rep_email" placeholder="例：taro.yamada@amenity.co.jp" required autocomplete="off">
+          </div>
+          <div class="ac-hint">💡 担当者名を選択すると、Eメールが自動入力されます</div>
         </div>
         <div class="field-group">
           <label for="facility_name">施設名 <span class="required">必須</span></label>
@@ -1858,6 +1940,146 @@
     // Trigger browser print dialog (user can choose "Save as PDF")
     window.print();
   }
+
+  // ===== AUTOCOMPLETE: 担当者名 ⇔ Eメール連動 =====
+  const AC_STORAGE_KEY = 'vdx_amenity_staff_db';
+
+  function getStaffDB() {
+    try {
+      const raw = localStorage.getItem(AC_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  function saveStaffDB(db) {
+    localStorage.setItem(AC_STORAGE_KEY, JSON.stringify(db));
+  }
+
+  function upsertStaff(name, email) {
+    if (!name || !name.trim()) return;
+    const db = getStaffDB();
+    const trimName = name.trim();
+    const trimEmail = (email || '').trim();
+    const idx = db.findIndex(s => s.name === trimName);
+    if (idx >= 0) {
+      if (trimEmail) db[idx].email = trimEmail;
+      // Move to top (most recent)
+      const item = db.splice(idx, 1)[0];
+      db.unshift(item);
+    } else {
+      db.unshift({ name: trimName, email: trimEmail });
+    }
+    // Keep max 50 entries
+    if (db.length > 50) db.length = 50;
+    saveStaffDB(db);
+  }
+
+  function deleteStaff(name) {
+    const db = getStaffDB().filter(s => s.name !== name);
+    saveStaffDB(db);
+  }
+
+  // Autocomplete UI
+  const acInput = document.getElementById('sales_rep');
+  const acEmailInput = document.getElementById('sales_rep_email');
+  const acDropdown = document.getElementById('acDropdown');
+  let acActiveIdx = -1;
+
+  function renderDropdown(filter) {
+    const db = getStaffDB();
+    const query = (filter || '').trim().toLowerCase();
+    const matches = query
+      ? db.filter(s => s.name.toLowerCase().includes(query) || (s.email && s.email.toLowerCase().includes(query)))
+      : db;
+
+    if (matches.length === 0) {
+      acDropdown.classList.remove('visible');
+      acDropdown.innerHTML = '';
+      return;
+    }
+
+    acDropdown.innerHTML = matches.map((s, i) =>
+      '<div class="ac-item" data-idx="' + i + '" data-name="' + escHtml(s.name) + '" data-email="' + escHtml(s.email || '') + '">'
+      + '<span><span class="ac-name">' + escHtml(s.name) + '</span>'
+      + (s.email ? '<span class="ac-email">' + escHtml(s.email) + '</span>' : '')
+      + '</span>'
+      + '<span class="ac-delete" title="削除" data-del="' + escHtml(s.name) + '">&times;</span>'
+      + '</div>'
+    ).join('');
+    acDropdown.classList.add('visible');
+    acActiveIdx = -1;
+
+    // Click handlers
+    acDropdown.querySelectorAll('.ac-item').forEach(item => {
+      item.addEventListener('mousedown', function(e) {
+        // Check if delete button was clicked
+        if (e.target.classList.contains('ac-delete')) {
+          e.preventDefault();
+          e.stopPropagation();
+          const delName = e.target.getAttribute('data-del');
+          deleteStaff(delName);
+          renderDropdown(acInput.value);
+          return;
+        }
+        e.preventDefault();
+        acInput.value = this.getAttribute('data-name');
+        acEmailInput.value = this.getAttribute('data-email') || '';
+        acDropdown.classList.remove('visible');
+      });
+    });
+  }
+
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  acInput.addEventListener('input', function() {
+    renderDropdown(this.value);
+  });
+
+  acInput.addEventListener('focus', function() {
+    renderDropdown(this.value);
+  });
+
+  acInput.addEventListener('blur', function() {
+    // Delay to allow click on dropdown
+    setTimeout(() => acDropdown.classList.remove('visible'), 200);
+  });
+
+  acInput.addEventListener('keydown', function(e) {
+    const items = acDropdown.querySelectorAll('.ac-item');
+    if (!items.length || !acDropdown.classList.contains('visible')) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      acActiveIdx = Math.min(acActiveIdx + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('active', i === acActiveIdx));
+      items[acActiveIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      acActiveIdx = Math.max(acActiveIdx - 1, 0);
+      items.forEach((el, i) => el.classList.toggle('active', i === acActiveIdx));
+      items[acActiveIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && acActiveIdx >= 0) {
+      e.preventDefault();
+      const sel = items[acActiveIdx];
+      acInput.value = sel.getAttribute('data-name');
+      acEmailInput.value = sel.getAttribute('data-email') || '';
+      acDropdown.classList.remove('visible');
+    } else if (e.key === 'Escape') {
+      acDropdown.classList.remove('visible');
+    }
+  });
+
+  // Save staff on form submit
+  const origSubmitHandler = document.getElementById('mainForm').onsubmit;
+  document.getElementById('mainForm').addEventListener('submit', function() {
+    const name = acInput.value;
+    const email = acEmailInput.value;
+    upsertStaff(name, email);
+  }, true);
 
   // Init
   updateProgress();
