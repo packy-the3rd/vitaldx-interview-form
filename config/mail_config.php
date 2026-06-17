@@ -6,7 +6,7 @@
 // =============================================================
 
 return [
-    'gmail_address'  => 'your-email@gmail.com',     // ← Gmailアドレス
-    'gmail_app_pass' => 'xxxx xxxx xxxx xxxx',       // ← アプリパスワード
+    'gmail_address'  => 'motohiro.boku@vital-dx.com',     // ← Gmailアドレス
+    'gmail_app_pass' => 'igno tgir jotp yywj',       // ← アプリパスワード
     'from_name'      => 'Vital DX インタビューシート',
 ];
