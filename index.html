@@ -2093,19 +2093,26 @@
       </div>
     `;
 
-    // Create a temporary container
+    // Create a temporary container (visible behind loading overlay for html2pdf rendering)
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = pdfHTML;
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
+    tempDiv.style.position = 'fixed';
     tempDiv.style.top = '0';
+    tempDiv.style.left = '0';
+    tempDiv.style.width = '210mm';
+    tempDiv.style.zIndex = '9998';
+    tempDiv.style.background = 'white';
+    tempDiv.style.overflow = 'auto';
     document.body.appendChild(tempDiv);
+
+    // Wait for fonts/rendering to settle
+    await new Promise(r => setTimeout(r, 300));
 
     const opt = {
       margin:       [8, 8, 8, 8],
       filename:     `VDX_Interview_${facilityName}_${visitDate}.pdf`,
       image:        { type: 'jpeg', quality: 0.95 },
-      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0, windowWidth: 794 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 

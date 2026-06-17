@@ -15,8 +15,48 @@ use PHPMailer\PHPMailer\Exception;
 
 // =============================================================
 // 認証情報を public_html の外から読み込み（セキュリティ対策）
+// パスを自動検出: public_html の親ディレクトリ → config/
 // =============================================================
-$config = require __DIR__ . '/../../../config/mail_config.php';
+$configPath = null;
+
+// 方法1: public_html の3階層上 (amenity-forms/api/ → amenity-forms/ → public_html/ → ドメイン/)
+$try1 = realpath(__DIR__ . '/../../../config/mail_config.php');
+if ($try1 && file_exists($try1)) {
+    $configPath = $try1;
+}
+
+// 方法2: public_html の2階層上 (api/ → public_html/ → ドメイン/) ※フォルダ構成が浅い場合
+if (!$configPath) {
+    $try2 = realpath(__DIR__ . '/../../config/mail_config.php');
+    if ($try2 && file_exists($try2)) {
+        $configPath = $try2;
+    }
+}
+
+// 方法3: 同じディレクトリの mail_config.php（テスト用フォールバック）
+if (!$configPath) {
+    $try3 = __DIR__ . '/mail_config.php';
+    if (file_exists($try3)) {
+        $configPath = $try3;
+    }
+}
+
+if (!$configPath) {
+    header('Content-Type: application/json; charset=UTF-8');
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Config file not found',
+        'hint'  => 'Place mail_config.php in: [domain]/config/ folder (outside public_html)',
+        'searched' => [
+            __DIR__ . '/../../../config/mail_config.php',
+            __DIR__ . '/../../config/mail_config.php',
+            __DIR__ . '/mail_config.php'
+        ]
+    ]);
+    exit;
+}
+
+$config = require $configPath;
 
 $GMAIL_ADDRESS  = $config['gmail_address'];
 $GMAIL_APP_PASS = $config['gmail_app_pass'];
@@ -100,8 +140,6 @@ try {
     // 送信元・送信先
     $mail->setFrom($GMAIL_ADDRESS, $FROM_NAME);
     $mail->addAddress($to_email, $to_name);
-    // BCCで社内にもコピー（任意）
-    // $mail->addBCC('sales@vital-dx.com', 'VitalDX Sales');
 
     // 件名
     $mail->Subject = "【Vital DX】営業インタビューシート - {$facility_name} ({$visit_date})";
