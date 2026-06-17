@@ -2,7 +2,7 @@
 // =============================================================
 // Vital DX インタビューシート PDF メール送信 API
 // Gmail SMTP 経由（PHPMailer使用）
-// 設置先: vital-dx.com/amenity-forms/api/send_email.php
+// 設置先: vital-dx.com/public_html/amenity-forms/api/send_email.php
 // =============================================================
 
 // PHPMailer ライブラリ読み込み
@@ -14,16 +14,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 // =============================================================
-// Gmail SMTP 設定
-// 
-// 【アプリパスワードの取得方法】
-// 1. Googleアカウント → セキュリティ → 2段階認証を有効化
-// 2. セキュリティ → アプリパスワード → 「メール」を選択
-// 3. 生成された16文字のパスワードを下記に設定
+// 認証情報を public_html の外から読み込み（セキュリティ対策）
 // =============================================================
-$GMAIL_ADDRESS  = 'your-email@gmail.com';    // ← Gmailアドレスを設定
-$GMAIL_APP_PASS = 'xxxx xxxx xxxx xxxx';     // ← アプリパスワードを設定
-$FROM_NAME      = 'Vital DX インタビューシート';
+$config = require __DIR__ . '/../../../config/mail_config.php';
+
+$GMAIL_ADDRESS  = $config['gmail_address'];
+$GMAIL_APP_PASS = $config['gmail_app_pass'];
+$FROM_NAME      = $config['from_name'];
 
 // =============================================================
 
@@ -31,7 +28,6 @@ header('Content-Type: application/json; charset=UTF-8');
 
 // POSTのみ許可
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    // 同一ドメインなのでCORSは基本不要だが念のため
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST');
     header('Access-Control-Allow-Headers: Content-Type');
