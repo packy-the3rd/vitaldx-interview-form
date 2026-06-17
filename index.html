@@ -632,11 +632,219 @@
       box-shadow: 0 8px 24px rgba(0,195,137,0.3);
     }
 
-    /* ===== PRINT / STAMP ===== */
+    /* ===== PRINT BUTTON ===== */
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #059669, #047857);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+    }
+    .btn-print:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(5,150,105,0.4);
+    }
+    .btn-print:active { transform: translateY(0); }
+
+    /* ===== PRINT / A4 OPTIMIZED ===== */
     @media print {
-      .progress-wrap, .submit-wrap { display: none; }
-      .header { background: #054D8A !important; -webkit-print-color-adjust: exact; }
-      body { padding: 0; }
+      /* ── Page setup ── */
+      @page {
+        size: A4 portrait;
+        margin: 12mm 14mm 12mm 14mm;
+      }
+
+      /* ── Hide non-print elements ── */
+      #pw-screen,
+      .progress-wrap,
+      .submit-wrap,
+      .btn-print,
+      .success-screen,
+      .campaign-banner {
+        display: none !important;
+      }
+
+      /* ── Force color printing ── */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
+      /* ── Body & layout ── */
+      body {
+        padding: 0 !important;
+        background: white !important;
+        font-size: 10pt !important;
+        line-height: 1.4 !important;
+      }
+
+      #main-content {
+        display: block !important;
+      }
+
+      .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+
+      /* ── Header compact ── */
+      .header {
+        background: linear-gradient(135deg, #054D8A, #0A6EBD) !important;
+        padding: 0 !important;
+        page-break-after: avoid;
+      }
+      .header-inner {
+        padding: 16px 20px 14px !important;
+      }
+      .header h1 {
+        font-size: 16pt !important;
+        margin-bottom: 4px !important;
+      }
+      .header p {
+        font-size: 9pt !important;
+      }
+      .header-meta {
+        margin-top: 8px !important;
+        gap: 14px !important;
+      }
+      .header-badge {
+        margin-bottom: 8px !important;
+      }
+
+      /* ── Section cards ── */
+      .section-card {
+        box-shadow: none !important;
+        border: 1.5px solid #D1D5DB !important;
+        margin-top: 12px !important;
+        page-break-inside: avoid;
+      }
+      .section-header {
+        padding: 12px 16px !important;
+        background: #F8FAFC !important;
+      }
+      .section-body {
+        padding: 14px 16px !important;
+      }
+
+      /* ── Form fields → print-friendly ── */
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      select,
+      textarea {
+        border: none !important;
+        border-bottom: 1.5px solid #9CA3AF !important;
+        border-radius: 0 !important;
+        padding: 4px 2px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        font-size: 10pt !important;
+        min-height: auto !important;
+      }
+
+      textarea {
+        border: 1.5px solid #9CA3AF !important;
+        border-radius: 4px !important;
+        min-height: 50px !important;
+        padding: 6px 8px !important;
+      }
+
+      /* ── Checkboxes & radios ── */
+      .opt-item {
+        border: 1px solid #D1D5DB !important;
+        padding: 4px 8px !important;
+        font-size: 9pt !important;
+        background: white !important;
+      }
+      .opt-item.selected {
+        border: 2px solid #0A6EBD !important;
+        background: #EFF6FF !important;
+      }
+
+      .confirm-item {
+        padding: 8px 12px !important;
+        margin-bottom: 8px !important;
+      }
+
+      /* ── Rank buttons ── */
+      .rank-btn {
+        padding: 8px 6px !important;
+        font-size: 10pt !important;
+      }
+      .rank-btn .rank-desc {
+        font-size: 8pt !important;
+      }
+
+      /* ── Spacing ── */
+      .field-group {
+        margin-bottom: 12px !important;
+      }
+      label, .field-label {
+        font-size: 10pt !important;
+        margin-bottom: 4px !important;
+      }
+
+      .two-col, .three-col {
+        gap: 10px !important;
+      }
+
+      .options-grid {
+        gap: 4px !important;
+      }
+
+      .alert {
+        padding: 8px 10px !important;
+        font-size: 9pt !important;
+        margin-bottom: 12px !important;
+      }
+
+      .divider {
+        margin: 12px 0 !important;
+      }
+
+      .hint {
+        font-size: 8pt !important;
+      }
+
+      /* ── Page break control ── */
+      .section-card {
+        page-break-inside: avoid;
+      }
+      h1, h2, h3, h4 {
+        page-break-after: avoid;
+      }
+
+      /* ── Print header stamp ── */
+      .print-header-stamp {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        margin-bottom: 8px;
+        border-bottom: 2px solid #054D8A;
+        font-size: 9pt;
+        color: #6B7280;
+      }
+      .print-header-stamp .stamp-date {
+        font-weight: 600;
+        color: #1A1F36;
+      }
+    }
+
+    /* ── Hide print-only elements on screen ── */
+    .print-header-stamp {
+      display: none;
     }
 
     /* ===== TOOLTIP ===== */
@@ -1252,9 +1460,14 @@
       送信前に全項目をご確認ください<br>
       <strong>A欄の2項目</strong>と<strong>G欄の総合評価</strong>は必須です
     </div>
-    <button type="submit" form="mainForm" class="btn-submit" id="submitBtn">
-      <span>📤</span> 送信して共有する
-    </button>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button type="button" class="btn-print" onclick="printForm()">
+        <span>🖨️</span> PDF出力
+      </button>
+      <button type="submit" form="mainForm" class="btn-submit" id="submitBtn">
+        <span>📤</span> 送信して共有する
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1606,6 +1819,44 @@
     document.querySelectorAll('.rank-btn').forEach(el => el.classList.remove('selected'));
     updateProgress();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ===== PRINT / PDF OUTPUT =====
+  function printForm() {
+    // Inject print timestamp
+    let stamp = document.querySelector('.print-header-stamp');
+    if (!stamp) {
+      stamp = document.createElement('div');
+      stamp.className = 'print-header-stamp';
+      const formArea = document.getElementById('main-content');
+      const header = formArea.querySelector('.header');
+      if (header && header.nextSibling) {
+        formArea.insertBefore(stamp, header.nextSibling);
+      } else {
+        formArea.prepend(stamp);
+      }
+    }
+    const now = new Date();
+    const dateStr = now.getFullYear() + '年'
+      + (now.getMonth()+1) + '月'
+      + now.getDate() + '日 '
+      + String(now.getHours()).padStart(2,'0') + ':'
+      + String(now.getMinutes()).padStart(2,'0');
+
+    // Get facility name and visitor name if filled
+    const facility = document.querySelector('[name="facility_name"]');
+    const visitor = document.querySelector('[name="staff_name"]');
+    const facilityStr = facility && facility.value ? facility.value : '';
+    const visitorStr = visitor && visitor.value ? visitor.value : '';
+    let infoStr = '';
+    if (facilityStr) infoStr += facilityStr;
+    if (visitorStr) infoStr += (infoStr ? ' ／ ' : '') + '担当: ' + visitorStr;
+
+    stamp.innerHTML = '<span>' + (infoStr || 'Vital DX 営業インタビューシート') + '</span>'
+      + '<span class="stamp-date">印刷日: ' + dateStr + '</span>';
+
+    // Trigger browser print dialog (user can choose "Save as PDF")
+    window.print();
   }
 
   // Init
